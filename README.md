@@ -44,6 +44,7 @@ Used for: AI Applications to Industrial Robotics, PhD Course at Politecnico di M
 ## Repository Structure
 
 - `slides.qmd`: main Quarto slide deck file
+- `custom.scss`: minimal academic Quarto/reveal.js theme for the slides
 - `sections/`: modular slide sections included by `slides.qmd`
 - `references.bib`: bibliography entries
 - `assets/images/`: image assets used in the slides

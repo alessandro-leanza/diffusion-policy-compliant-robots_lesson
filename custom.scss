@@ -1,0 +1,193 @@
+/*-- scss:defaults --*/
+
+$body-bg: #ffffff;
+$body-color: #1f2933;
+$presentation-heading-color: #111827;
+$presentation-heading-font-weight: 650;
+$presentation-heading-text-transform: none;
+$link-color: #1f5eff;
+$selection-bg: #dbeafe;
+$selection-color: #111827;
+$code-block-bg: #f8fafc;
+$code-block-border-color: #e5e7eb;
+
+/*-- scss:rules --*/
+
+:root {
+  --lecture-bg: #ffffff;
+  --lecture-text: #1f2933;
+  --lecture-heading: #111827;
+  --lecture-muted: #6b7280;
+  --lecture-accent: #1f5eff;
+  --lecture-border: #e5e7eb;
+  --lecture-box: #f8fafc;
+  --lecture-warning: #b45309;
+}
+
+.reveal {
+  background: var(--lecture-bg);
+  color: var(--lecture-text);
+  font-size: 38px;
+}
+
+.reveal .slides {
+  text-align: left;
+}
+
+.reveal .slides section {
+  box-sizing: border-box;
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3 {
+  color: var(--lecture-heading);
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.reveal h1 {
+  font-size: 1.9em;
+}
+
+.reveal h2 {
+  border-bottom: 2px solid var(--lecture-border);
+  font-size: 1.35em;
+  margin-bottom: 0.7em;
+  padding-bottom: 0.22em;
+}
+
+.reveal h3 {
+  font-size: 1.05em;
+}
+
+.reveal p,
+.reveal li {
+  line-height: 1.35;
+}
+
+.reveal strong {
+  color: var(--lecture-heading);
+}
+
+.reveal a {
+  color: var(--lecture-accent);
+}
+
+.reveal blockquote {
+  background: var(--lecture-box);
+  border-left: 5px solid var(--lecture-accent);
+  box-shadow: none;
+  color: var(--lecture-text);
+  font-style: normal;
+  padding: 0.6em 0.9em;
+}
+
+.reveal pre {
+  box-shadow: none;
+}
+
+.reveal code {
+  color: var(--lecture-heading);
+}
+
+.reveal .MathJax_Display,
+.reveal mjx-container[display="true"] {
+  font-size: 1.12em;
+  margin: 0.65em 0;
+}
+
+.reveal section.section-divider {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.reveal section.section-divider h1 {
+  border-bottom: 3px solid var(--lecture-accent);
+  display: inline-block;
+  margin-bottom: 0.35em;
+  padding-bottom: 0.2em;
+}
+
+.reveal section.section-divider h2,
+.reveal section.section-divider p {
+  border-bottom: 0;
+  color: var(--lecture-muted);
+}
+
+.center {
+  text-align: center;
+}
+
+.small {
+  font-size: 0.72em;
+}
+
+.muted {
+  color: var(--lecture-muted);
+}
+
+.accent {
+  color: var(--lecture-accent);
+}
+
+.takeaway {
+  background: var(--lecture-box);
+  border-left: 6px solid var(--lecture-accent);
+  margin-top: 1em;
+  padding: 0.7em 0.9em;
+}
+
+.takeaway > :first-child,
+.warning > :first-child {
+  margin-top: 0;
+}
+
+.takeaway > :last-child,
+.warning > :last-child {
+  margin-bottom: 0;
+}
+
+.warning {
+  background: #fffbeb;
+  border-left: 6px solid var(--lecture-warning);
+  margin-top: 1em;
+  padding: 0.7em 0.9em;
+}
+
+.warning strong {
+  color: var(--lecture-warning);
+}
+
+.two-column-balanced {
+  display: grid;
+  gap: 1.6em;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.compact p,
+.compact li {
+  line-height: 1.2;
+  margin-bottom: 0.32em;
+}
+
+.compact ul,
+.compact ol {
+  margin-bottom: 0.4em;
+}
+
+.large-equation {
+  font-size: 1.28em;
+}
+
+.large-equation .MathJax_Display,
+.large-equation mjx-container[display="true"] {
+  font-size: 1.18em;
+}
+
+@media (max-width: 900px) {
+  .two-column-balanced {
+    grid-template-columns: 1fr;
+  }
+}

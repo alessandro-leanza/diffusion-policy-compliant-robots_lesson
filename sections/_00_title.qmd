@@ -28,6 +28,34 @@ By the end of the lecture, students should be able to:
 
 ---
 
+# Theme Check: Key Takeaway
+
+::: {.takeaway}
+Diffusion Policy is useful because it models **temporally coherent, multimodal action trajectories**, while compliant control determines how those trajectories interact with contact forces.
+:::
+
+---
+
+# Theme Check: Large Equation
+
+::: {.large-equation}
+$$
+\mathbf{a}_{t:t+H}
+\sim
+p_\theta\left(
+\mathbf{a}_{t:t+H}
+\mid
+\mathbf{o}_{t-T_o:t}
+\right)
+$$
+:::
+
+<div class="muted small">
+The policy samples a future action chunk conditioned on recent observations.
+</div>
+
+---
+
 # Lecture Scope
 
 - This deck is a scaffold for a 2.5-hour graduate lecture.
