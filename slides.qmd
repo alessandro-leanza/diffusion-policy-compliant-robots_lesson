@@ -1,0 +1,98 @@
+---
+title: "Diffusion Policy for Compliant Robots"
+subtitle: "From Imitation Learning to Variable Admittance Control"
+author: "Alessandro Leanza"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    chalkboard: true
+    incremental: false
+    transition: slide
+    width: 1600
+    height: 900
+    smaller: true
+bibliography: references.bib
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+# Diffusion Policy for Compliant Robots
+
+## Learning objectives
+
+By the end of this lecture, you should understand:
+
+- why imitation learning is useful for robotics;
+- why simple behavioral cloning is often insufficient;
+- how diffusion models generate samples through denoising;
+- how Diffusion Policy generates action trajectories;
+- why inference speed matters in robotic control;
+- why compliant robots need impedance/admittance control;
+- how Diffusion Policy can be combined with variable admittance control.
+
+---
+
+# Part I — Motivation
+
+## Why learning from demonstrations?
+
+Robots often need to solve tasks where designing a reward function is difficult, expensive, or unsafe.
+
+Instead of specifying the task manually, we can collect expert demonstrations:
+
+$$
+\mathcal{D} = \{(o_t, a_t)\}_{t=1}^{N}
+$$
+
+where $o_t$ is the observation and $a_t$ is the expert action.
+
+---
+
+## The central question
+
+Can we learn a policy:
+
+$$
+\pi_\theta(a_t | o_t)
+$$
+
+that reproduces expert behavior and generalizes to new situations?
+
+---
+
+# Part II — Diffusion Policy
+
+## Key idea
+
+Diffusion Policy does not generate a single action.
+
+It generates a sequence of future actions:
+
+$$
+\mathbf{a}_{t:t+H}
+\sim
+p_\theta(\mathbf{a}_{t:t+H} | \mathbf{o}_{t-T_o:t})
+$$
+
+---
+
+# Part III — Compliant Control
+
+## Why compliance matters
+
+In contact-rich robotics, the robot should not only decide where to move.
+
+It should also decide how stiff or compliant it should be during interaction.
+
+---
+
+## Variable admittance control
+
+A simple admittance model maps external forces into motion corrections:
+
+$$
+M_d \ddot{x}_r + D_d \dot{x}_r + K_d x_r = F_{ext}
+$$
