@@ -39,7 +39,7 @@ The material is intended for graduate students or researchers with basic familia
 
 ## Course / Teaching Context
 
-Used for: [Course name], [Program/University], [Academic year]
+Used for: AI Applications to Industrial Robotics, PhD Course at Politecnico di Milano (POLIMI), 2025/2026
 
 ## Repository Structure
 
