@@ -1,0 +1,73 @@
+# Compliant Control
+
+## Why Position-Only Policies Are Not Enough
+
+- Position commands alone do not specify interaction behavior.
+- The same motion can be safe or unsafe depending on stiffness.
+- Contact-rich manipulation needs motion and mechanical response.
+
+TODO: Insert contact force illustration at `figures/position_only_limitations.png`.
+
+---
+
+## Position, Force, and Compliant Control
+
+- Position control: track desired motion.
+- Force control: regulate interaction force.
+- Compliant control: shape the dynamic relation between force and motion.
+
+---
+
+## Impedance Control Intuition
+
+Impedance control defines how the robot should generate forces in response to motion errors.
+
+Useful mental model:
+
+- high stiffness: precise but less forgiving
+- low stiffness: safer but less accurate
+- damping: dissipates energy and smooths response
+
+---
+
+## Admittance Control Intuition
+
+Admittance control maps measured external force to a motion correction.
+
+This is useful when the low-level robot interface accepts position or velocity commands.
+
+---
+
+## Mass-Spring-Damper Equation
+
+A common admittance model is:
+
+$$
+M_d \ddot{x}_r + D_d \dot{x}_r + K_d x_r = F_{ext}
+$$
+
+where $M_d$, $D_d$, and $K_d$ are desired mass, damping, and stiffness.
+
+---
+
+## Variable Stiffness and Damping
+
+Instead of fixed gains, the controller can adapt:
+
+$$
+K_d = K_d(t, o_t),
+\qquad
+D_d = D_d(t, o_t)
+$$
+
+This creates task-dependent compliance.
+
+---
+
+## Stability and Safety Intuition
+
+- Learned parameters must remain within safe bounds.
+- Fast changes in stiffness or damping can destabilize interaction.
+- Passivity and energy-based reasoning provide useful guardrails.
+
+TODO: Insert safety envelope figure at `figures/compliance_safety_bounds.png`.

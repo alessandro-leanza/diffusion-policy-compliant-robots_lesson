@@ -1,0 +1,62 @@
+# Inference Efficiency
+
+## Why Speed Matters in Robot Control
+
+- Control loops have strict timing budgets.
+- Slow inference increases tracking error and reaction delay.
+- Contact-rich tasks may require fast corrections.
+
+TODO: Insert control loop timing diagram at `figures/control_loop_latency.png`.
+
+---
+
+## Denoising Steps vs Latency
+
+Let $K$ be the number of denoising steps. A rough latency model is:
+
+$$
+T_{infer} \approx K \cdot T_{net}
+$$
+
+where $T_{net}$ is the time for one denoising network evaluation.
+
+---
+
+## DDIM and Fewer Sampling Steps
+
+- DDIM-style sampling can reduce the number of denoising steps.
+- Fewer steps reduce latency.
+- The risk is lower action quality or less stable behavior.
+
+TODO: Insert quality-latency curve at `figures/sampling_steps_latency.png`.
+
+---
+
+## Action Chunking and Replanning Frequency
+
+- Larger chunks amortize inference cost over multiple control steps.
+- Smaller execution horizons react faster to new observations.
+- The design choice depends on task dynamics and contact uncertainty.
+
+---
+
+## Pruning and Distillation
+
+Placeholder topics:
+
+- smaller denoising networks
+- policy distillation
+- consistency-style sampling
+- hardware-aware deployment
+
+---
+
+## Slow-Fast Policy Placeholder
+
+Potential architecture:
+
+- a slow diffusion policy proposes temporally coherent plans
+- a fast local controller tracks, filters, or corrects actions
+- compliance parameters adapt at a higher control rate
+
+TODO: Insert slow-fast control architecture at `figures/slow_fast_policy.png`.

@@ -1,0 +1,39 @@
+# Motivation
+
+## Why Compliant Robots Matter
+
+- Physical robots often operate near people, tools, fixtures, and uncertain environments.
+- Contact is not a failure mode; it is part of the task.
+- Compliance helps robots absorb uncertainty while maintaining purposeful behavior.
+
+TODO: Insert image of a compliant robot manipulating an object at `assets/images/compliant_robot_contact.png`.
+
+---
+
+## Contact-Rich Manipulation Is Difficult
+
+- Small pose errors can create large force errors.
+- Friction, deformation, and contact switches are hard to model.
+- Purely geometric plans often fail when the environment pushes back.
+
+TODO: Insert contact-rich manipulation failure/success figure at `figures/contact_rich_challenges.png`.
+
+---
+
+## Why Learning from Demonstrations Helps
+
+- Demonstrations encode task timing, recovery behavior, and implicit contact strategies.
+- Expert data can be easier to collect than dense reward functions.
+- Learning can capture behaviors that are difficult to specify analytically.
+
+$$
+\mathcal{D} = \{(o_t, a_t)\}_{t=1}^{N}
+$$
+
+---
+
+## From Demonstrations to Control
+
+- The learning problem: infer a policy from demonstrations.
+- The control problem: execute that policy safely on a physical robot.
+- The central tension: expressive learned behavior must respect real-time and safety constraints.

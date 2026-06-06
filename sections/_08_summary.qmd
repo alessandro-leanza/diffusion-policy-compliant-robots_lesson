@@ -1,0 +1,33 @@
+# Summary
+
+## Final Takeaways
+
+- Imitation learning provides a practical route to robot skill acquisition.
+- Diffusion policies offer expressive multimodal action generation.
+- Real-time deployment requires attention to inference latency.
+- Contact-rich robotics also needs compliant control, not just motion prediction.
+- Variable admittance is a natural bridge between learned behavior and physical interaction.
+
+---
+
+## Open Research Questions
+
+- How many denoising steps are enough for stable robot behavior?
+- Can learned compliance parameters be made certifiably safe?
+- How should policies combine vision, force, proprioception, and EMG?
+- What benchmarks best measure contact-rich manipulation quality?
+
+---
+
+## Discussion Questions
+
+- When would a deterministic policy be preferable to a diffusion policy?
+- What failure modes are unique to learned compliance?
+- Should a policy output low-level control parameters directly?
+- How should we trade off task success, safety, and interpretability?
+
+---
+
+## References
+
+TODO: Add citations throughout the deck and complete `references.bib`.

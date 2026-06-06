@@ -1,0 +1,71 @@
+# Imitation Learning
+
+## Minimal Setup
+
+Imitation learning aims to learn a policy from expert demonstrations:
+
+$$
+\pi_\theta(a_t \mid o_t)
+$$
+
+where $o_t$ is the robot observation and $a_t$ is the expert action.
+
+---
+
+## Behavioral Cloning
+
+Behavioral cloning casts imitation learning as supervised learning:
+
+$$
+\mathcal{L}_{BC}(\theta)
+=
+\mathbb{E}_{(o_t,a_t)\sim\mathcal{D}}
+\left[
+\lVert \pi_\theta(o_t) - a_t \rVert^2
+\right]
+$$
+
+TODO: Insert diagram of supervised policy learning at `figures/behavioral_cloning_pipeline.png`.
+
+---
+
+## Why Not Only Reinforcement Learning?
+
+- Reward design is difficult for contact-rich tasks.
+- Exploration can be unsafe or slow on hardware.
+- Resetting physical systems is expensive.
+- Demonstrations provide useful structure before trial-and-error optimization.
+
+---
+
+## Covariate Shift
+
+- During training, the policy sees expert states.
+- During deployment, policy errors can push the robot into unseen states.
+- Small mistakes can compound over time.
+
+TODO: Insert covariate shift trajectory illustration at `figures/covariate_shift.png`.
+
+---
+
+## Multimodal Actions
+
+For the same observation, there may be several valid expert actions:
+
+- grasp from the left or the right
+- push or pull
+- wait, retreat, or continue contact
+
+Mean-squared behavioral cloning can average modes and produce invalid actions.
+
+---
+
+## Transition to Generative Policies
+
+Generative policies model action distributions instead of a single deterministic action:
+
+$$
+a_t \sim p_\theta(a_t \mid o_t)
+$$
+
+This motivates diffusion-based policies for high-dimensional, multimodal robot action generation.

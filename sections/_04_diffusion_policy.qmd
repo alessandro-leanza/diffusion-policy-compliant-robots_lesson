@@ -1,0 +1,94 @@
+# Diffusion Policy
+
+## What Diffusion Policy Generates
+
+Diffusion Policy generates short-horizon action trajectories:
+
+$$
+\mathbf{a}_{t:t+H}
+\sim
+p_\theta(\mathbf{a}_{t:t+H} \mid \mathbf{o}_{t-T_o:t})
+$$
+
+This gives the policy temporal structure beyond a single next action.
+
+---
+
+## Action Trajectories Instead of Single Actions
+
+- A trajectory can encode approach, contact, and recovery phases.
+- Temporal action chunks reduce myopic behavior.
+- Multimodal sequence generation can represent several plausible strategies.
+
+TODO: Insert trajectory chunk visualization at `figures/action_trajectory_chunk.png`.
+
+---
+
+## Observation Conditioning
+
+Possible conditioning inputs:
+
+- RGB or RGB-D images
+- proprioception
+- force/torque measurements
+- task labels or language instructions
+
+TODO: Insert observation encoder diagram at `figures/observation_conditioning.png`.
+
+---
+
+## Action Chunking
+
+- Predict $H$ future actions.
+- Execute only the first $h \le H$ actions.
+- Replan with fresh observations.
+
+This connects diffusion sampling with receding horizon control.
+
+---
+
+## Receding Horizon Execution
+
+At robot time $t$:
+
+1. observe the scene
+2. sample an action trajectory
+3. execute the first actions
+4. discard the remainder
+5. replan
+
+TODO: Insert receding horizon timeline at `figures/receding_horizon_execution.png`.
+
+---
+
+## Training Pipeline
+
+- Collect demonstrations.
+- Encode observations.
+- Add noise to expert action chunks.
+- Train the denoising network.
+
+TODO: Insert training pipeline figure at `figures/diffusion_policy_training.png`.
+
+---
+
+## Inference Pipeline
+
+- Encode current observations.
+- Initialize noisy action trajectory.
+- Iteratively denoise.
+- Send selected actions to the controller.
+
+TODO: Insert inference pipeline figure at `figures/diffusion_policy_inference.png`.
+
+---
+
+## Demonstration Video Placeholder
+
+TODO: Insert demo video at `assets/videos/diffusion_policy_demo.mp4`.
+
+```{=html}
+<!-- Example future syntax:
+<video controls src="assets/videos/diffusion_policy_demo.mp4"></video>
+-->
+```

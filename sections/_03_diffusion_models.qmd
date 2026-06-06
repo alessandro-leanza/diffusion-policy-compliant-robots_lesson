@@ -1,0 +1,88 @@
+# Diffusion Models
+
+## Core Intuition
+
+- Start from structured data.
+- Gradually add noise until the data is nearly random.
+- Learn to reverse this process by denoising.
+
+TODO: Insert diffusion noising/denoising diagram at `figures/diffusion_process.png`.
+
+---
+
+## From Images to Actions
+
+Diffusion models are widely known for image generation, but the same idea can generate:
+
+- robot joint commands
+- end-effector poses
+- action trajectories
+- control parameters
+
+The sample space changes; the denoising principle remains.
+
+---
+
+## Forward Noising Process
+
+A common forward process is:
+
+$$
+q(x_k \mid x_{k-1})
+=
+\mathcal{N}
+\left(
+x_k;
+\sqrt{1-\beta_k}x_{k-1},
+\beta_k I
+\right)
+$$
+
+where $k$ indexes diffusion time, not robot time.
+
+---
+
+## Reverse Denoising Process
+
+The learned model predicts how to move from noisy samples toward clean data:
+
+$$
+p_\theta(x_{k-1} \mid x_k, c)
+$$
+
+where $c$ is optional conditioning information such as images, proprioception, or task context.
+
+---
+
+## Noise Prediction Objective
+
+A standard training objective predicts the injected noise:
+
+$$
+\mathcal{L}_{diff}(\theta)
+=
+\mathbb{E}_{x_0,\epsilon,k}
+\left[
+\lVert
+\epsilon - \epsilon_\theta(x_k, k, c)
+\rVert^2
+\right]
+$$
+
+---
+
+## Sampling Bottleneck
+
+- Sampling requires repeated denoising steps.
+- More steps usually improve sample quality.
+- Robot control also requires bounded latency.
+
+This tradeoff becomes central when diffusion models are used as policies.
+
+---
+
+## DDPM vs DDIM
+
+- DDPM: stochastic denoising sampler.
+- DDIM: deterministic or partially deterministic sampler with fewer steps.
+- TODO: Add comparison table at `figures/ddpm_ddim_comparison.png`.

@@ -1,0 +1,9 @@
+.quarto/
+*_files/
+slides.html
+slides.pdf
+slides.pptx
+*.log
+__pycache__/
+.DS_Store
+AGENTS.md

@@ -1,0 +1,79 @@
+# Diffusion Policy and Variable Admittance
+
+## Why Combine Them?
+
+- Diffusion Policy can model multimodal task strategies.
+- Variable admittance can shape how the robot physically interacts.
+- The combined problem asks: what should the robot do, and how compliant should it be?
+
+---
+
+## Architecture: Desired Trajectories
+
+The diffusion policy outputs desired motion:
+
+$$
+\mathbf{x}^{des}_{t:t+H}
+\sim
+p_\theta(\mathbf{x}^{des}_{t:t+H} \mid \mathbf{o}_{t-T_o:t})
+$$
+
+An admittance controller handles contact response.
+
+TODO: Insert architecture diagram at `figures/dp_outputs_trajectory.png`.
+
+---
+
+## Architecture: Trajectory and Compliance Parameters
+
+The diffusion policy can also output motion and control parameters:
+
+$$
+(\mathbf{x}^{des}_{t:t+H}, \mathbf{K}_{t:t+H}, \mathbf{D}_{t:t+H})
+\sim
+p_\theta(\cdot \mid \mathbf{o}_{t-T_o:t})
+$$
+
+The controller then enforces bounds before execution.
+
+TODO: Insert architecture diagram at `figures/dp_outputs_admittance_parameters.png`.
+
+---
+
+## Sensor Modalities
+
+Potential conditioning signals:
+
+- vision for scene context
+- force/torque for interaction state
+- proprioception for robot state
+- EMG for human intent or assistance cues
+
+TODO: Insert multimodal sensing diagram at `figures/multimodal_robot_sensing.png`.
+
+---
+
+## Safety Bounds for Learned Parameters
+
+Learned gains should be projected or constrained:
+
+$$
+K_{min} \preceq K_d \preceq K_{max},
+\qquad
+D_{min} \preceq D_d \preceq D_{max}
+$$
+
+This keeps the learned policy inside an admissible control envelope.
+
+---
+
+## Connection to My Research Direction
+
+Possible research questions:
+
+- Can diffusion policies learn when to be stiff or compliant?
+- How should force and EMG signals condition the policy?
+- What safety filters are needed for learned admittance parameters?
+- How do we evaluate performance beyond task success?
+
+TODO: Add project-specific system diagram at `figures/research_direction_system.png`.
