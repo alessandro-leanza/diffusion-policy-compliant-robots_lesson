@@ -1,54 +1,69 @@
 # Diffusion Models {.section-divider}
 
-## Core Intuition
+## One Recipe, Many Data Types
 
 ::: {.two-column-balanced}
 ::: {.compact}
-- Start from structured data.
-- Gradually add noise until the data is nearly random.
-- Learn to reverse this process by denoising.
+Diffusion models do not fundamentally care whether the sample is:
+
+- an image
+- a video
+- a robot trajectory
+- an action chunk
+
+The object is represented as a tensor and modeled as a sample from a data distribution.
 :::
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Noising and denoising process</div>
-<div class="placeholder-path">figures/diffusion_process.png</div>
+::: {}
+![](assets/figures/tensor_modalities.svg){width=100%}
 :::
 :::
 
 ::: {.notes}
-Main point: introduce diffusion models through the noising-and-denoising story before showing equations.
+Main point: start from the generality of the diffusion recipe before specializing to actions.
 
-Intuition: the model learns many small cleanup steps, like gradually sharpening a corrupted signal.
+The useful insight from Vincenzo's lecture material is that diffusion operates on tensors. An image, a video, and a robot trajectory have different structure, but in each case we can represent the object as a point in a high-dimensional space.
 
-Warning: the noise process is a training construction; the robot is not physically adding noise to its actions during deployment.
+For robotics, this matters because the model can generate not only pixels, but also vectors of joint commands, end-effector poses, target displacements, or controller parameters. The neural architecture changes with the structure of the tensor, but the noising and denoising idea remains the same.
+
+Warning: this does not mean the semantics are irrelevant for the whole system. Semantics enter through the architecture, the conditioning information, the dataset, and the controller that executes the output.
 :::
 
 ---
 
-## From Images to Actions
+## Diffusion as Distribution Learning
 
-Diffusion models are widely known for image generation, but the same idea can generate:
+Generation means sampling a structured object:
 
-- robot joint commands
-- end-effector poses
-- action trajectories
-- control parameters
+::: {.equation-card}
+$$
+x_0 \sim p_{\text{data}}(x)
+$$
+:::
 
-The sample space changes; the denoising principle remains.
+Diffusion replaces direct sampling from $p_{\text{data}}$ with an easier path:
+
+::: {.process-list}
+1. define a fixed process that destroys structure with Gaussian noise
+2. train a neural network to reverse that process
+3. sample by iteratively denoising random noise
+:::
 
 ::: {.notes}
-Main point: make clear that diffusion is a general generative modeling recipe, not only an image model.
+Main point: formalize generation as sampling from the data distribution.
 
-Intuition: actions can be treated as structured vectors or sequences, just as images are structured arrays.
+We do not know the true distribution of demonstrations, images, or action chunks. We only have samples. A diffusion model learns a reverse process that starts from a distribution we can sample easily, usually a standard Gaussian, and gradually moves toward the data distribution.
 
-Warning: action generation has stricter timing and safety requirements than offline image generation.
+This framing will later become a policy: instead of sampling an unconditional object, we sample an action trajectory conditioned on observations.
 :::
 
 ---
 
-## Forward Noising Process
+## Forward and Reverse Processes
 
-A common forward process is:
+::: {.two-column-balanced}
+::: {.compact}
+The forward process is fixed:
 
 $$
 q(x_k \mid x_{k-1})
@@ -61,34 +76,64 @@ x_k;
 \right)
 $$
 
-where $k$ indexes diffusion time, not robot time.
-
-::: {.notes}
-Main point: explain the forward noising equation and the meaning of the diffusion index.
-
-Intuition: each step slightly shrinks the clean signal and adds Gaussian noise until structure disappears.
-
-Warning: emphasize that $k$ is diffusion time, not the robot time $t$ used for control trajectories.
-:::
-
----
-
-## Reverse Denoising Process
-
-The learned model predicts how to move from noisy samples toward clean data:
+The reverse process is learned:
 
 $$
 p_\theta(x_{k-1} \mid x_k, c)
 $$
+:::
 
-where $c$ is optional conditioning information such as images, proprioception, or task context.
+::: {}
+![](assets/figures/diffusion_forward_reverse.svg){width=100%}
+:::
+:::
 
 ::: {.notes}
-Main point: the reverse process is the learned generative direction, conditioned on the task context.
+Main point: separate the fixed corruption process from the learned denoising process.
 
-Intuition: conditioning tells the denoiser what kind of sample should emerge from noise.
+The forward process is not learned. We choose a schedule of noise variances and progressively corrupt the data. The reverse process is learned because the true reverse conditional depends on the unknown data distribution.
 
-Warning: do not describe the model as exactly inverting the forward process; it learns an approximate reverse distribution from data.
+I use $k$ for diffusion time. This is not robot time. Robot time indexes physical execution, while diffusion time indexes the artificial denoising loop used by the generative model.
+
+The conditioning variable $c$ will later be the robot observation history: images, proprioception, force signals, or task context.
+:::
+
+---
+
+## Closed-Form Noising
+
+By composing the forward steps, we can sample directly at any diffusion step:
+
+::: {.equation-card}
+$$
+x_k
+=
+\sqrt{\bar{\alpha}_k}x_0
++
+\sqrt{1-\bar{\alpha}_k}\epsilon,
+\qquad
+\epsilon \sim \mathcal{N}(0,I)
+$$
+:::
+
+where
+
+$$
+\alpha_k = 1-\beta_k,
+\qquad
+\bar{\alpha}_k = \prod_{i=1}^{k}\alpha_i .
+$$
+
+::: {.takeaway}
+Training does not require simulating all previous noising steps. We can draw $k$ and corrupt $x_0$ in one step.
+:::
+
+::: {.notes}
+Main point: the closed-form forward marginal makes training efficient.
+
+This is one of the most important practical facts. If we want a noisy sample at diffusion step $k$, we do not have to run the full chain from $0$ to $k$. We sample Gaussian noise once and mix it with the clean sample using $\bar{\alpha}_k$.
+
+For action trajectories, $x_0$ is the expert action chunk. We corrupt that chunk and ask the network to predict the noise that was added.
 :::
 
 ---
@@ -97,6 +142,7 @@ Warning: do not describe the model as exactly inverting the forward process; it 
 
 A standard training objective predicts the injected noise:
 
+::: {.equation-card}
 $$
 \mathcal{L}_{diff}(\theta)
 =
@@ -107,49 +153,111 @@ $$
 \rVert^2
 \right]
 $$
+:::
+
+::: {.two-column-balanced}
+::: {.compact}
+- $x_0$: clean data sample or expert action chunk
+- $x_k$: noisy version at diffusion step $k$
+- $c$: optional conditioning information
+- $\epsilon_\theta$: denoising network prediction
+:::
+
+::: {.warning}
+The model is not trained to "undo robot noise." The noise is a learning construction used to fit a generative model.
+:::
+:::
 
 ::: {.notes}
-Main point: the training target is often the noise that was added, not the clean sample directly.
+Main point: the model learns to estimate the noise component added during the forward process.
 
-Intuition: predicting noise gives the model a consistent denoising task across many corruption levels.
+Once the model can estimate the noise in $x_k$, we can use that estimate to move the sample toward a cleaner point. The same loss is used whether $x$ is an image tensor or an action trajectory tensor.
 
-Warning: this is one common parameterization; papers may also predict clean samples or velocity-like variables.
+There are other parameterizations, such as predicting $x_0$ or a velocity variable, but noise prediction is the standard formulation to introduce here.
+:::
+
+---
+
+## Architecture Depends on Structure
+
+::: {.two-column-balanced}
+::: {.compact}
+The loss can stay the same while the denoising backbone changes:
+
+- 2D U-Net for image tensors
+- 1D U-Net for temporal action chunks
+- Transformers for longer-range coupling
+
+For Diffusion Policy, the key transition is from spatial denoising to sequence denoising.
+:::
+
+::: {}
+![](assets/figures/diffusion_architecture_bridge.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+Main point: motivate the 1D U-Net used later in Diffusion Policy.
+
+The diffusion objective only says that the network receives a noisy sample and a diffusion step, then predicts noise of the same shape. It does not prescribe the architecture.
+
+The architecture should match the structure of the data. Images have local spatial structure, so a 2D U-Net is natural. Action trajectories have temporal structure, so a 1D U-Net with convolutions along the horizon is natural. Transformers can be useful when longer-range interactions dominate, but they usually require more data and compute.
 :::
 
 ---
 
 ## Sampling Bottleneck
 
-- Sampling requires repeated denoising steps.
-- More steps usually improve sample quality.
-- Robot control also requires bounded latency.
+Sampling starts from Gaussian noise and applies the denoiser repeatedly:
 
-This tradeoff becomes central when diffusion models are used as policies.
+::: {.equation-card}
+$$
+x_K \sim \mathcal{N}(0,I),
+\qquad
+x_K \rightarrow x_{K-1} \rightarrow \cdots \rightarrow x_0
+$$
+:::
+
+- More denoising steps usually give better refinement.
+- Each step is a neural network evaluation.
+- Robot policies must respect a control-loop timing budget.
 
 ::: {.notes}
-Main point: connect diffusion sampling cost to real-time robot control constraints.
+Main point: introduce the computational bottleneck before discussing DDPM and DDIM.
 
-Intuition: an image generator can spend seconds sampling; a controller may have only milliseconds before the next command is due.
+This is where diffusion models become different from a standard feed-forward policy. A deterministic policy typically performs one forward pass per control query. A diffusion policy may require tens or hundreds of denoising passes to produce one action chunk.
 
-Warning: fewer steps are not automatically better if action quality or stability degrades.
+For offline image generation, this may be acceptable. For robot control, latency and jitter affect closed-loop behavior, tracking error, and contact response.
 :::
 
 ---
 
 ## DDPM vs DDIM
 
-- DDPM: stochastic denoising sampler.
-- DDIM: deterministic or partially deterministic sampler with fewer steps.
+::: {.two-column-balanced}
+::: {.compact}
+**DDPM**
 
-::: {.figure-placeholder}
-<div class="placeholder-title">DDPM vs DDIM comparison table</div>
-<div class="placeholder-path">figures/ddpm_ddim_comparison.png</div>
+- stochastic reverse process
+- many small denoising steps
+- conceptually close to the probabilistic derivation
+
+**DDIM**
+
+- deterministic or partially stochastic updates
+- fewer denoising steps
+- attractive for real-time policy inference
+:::
+
+::: {}
+![](assets/figures/ddpm_ddim_comparison.svg){width=100%}
+:::
 :::
 
 ::: {.notes}
-Main point: introduce DDIM as one route toward faster diffusion-policy inference.
+Main point: distinguish DDPM and DDIM in terms of sampling behavior and control relevance.
 
-Intuition: DDPM is closer to a slow random walk through denoising; DDIM can take more direct deterministic steps.
+DDPM sampling adds stochasticity at reverse steps. DDIM constructs a non-Markovian reverse trajectory that can skip many intermediate timesteps while preserving the same training objective.
 
-Warning: avoid overclaiming that DDIM always preserves performance; the speed-quality tradeoff is empirical.
+For robotics, the practical question is not only sample quality. It is whether the sampled action chunk is good enough, stable enough, and fast enough for closed-loop deployment.
 :::

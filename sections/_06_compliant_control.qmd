@@ -11,7 +11,7 @@
 
 ::: {.figure-placeholder}
 <div class="placeholder-title">Position command under contact</div>
-<div class="placeholder-path">figures/position_only_limitations.png</div>
+<div class="placeholder-path">assets/figures/position_only_limitations.png</div>
 :::
 :::
 
@@ -127,7 +127,7 @@ Warning: changing gains online is powerful but risky; abrupt or unconstrained ga
 
 ::: {.figure-placeholder}
 <div class="placeholder-title">Compliance safety envelope</div>
-<div class="placeholder-path">figures/compliance_safety_bounds.png</div>
+<div class="placeholder-path">assets/figures/compliance_safety_bounds.png</div>
 :::
 
 ::: {.notes}

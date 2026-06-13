@@ -10,7 +10,7 @@
 :::
 
 ::: {}
-![](assets/images/compliant_robot_example_motivation.jpg){width=100%}
+![](assets/photos/compliant_robot_example_motivation.jpg){width=100%}
 :::
 :::
 
@@ -34,7 +34,7 @@ So when I say "compliance", I do not mean that the robot is simply weak, slow, o
 :::
 
 <div class="motivation-schematic">
-<img src="figures/contact_rich_challenges.svg" alt="Schematic showing how a small pose error can cause a force spike, while compliant behavior enables recovery.">
+<img src="assets/figures/contact_rich_challenges.svg" alt="Schematic showing how a small pose error can cause a force spike, while compliant behavior enables recovery.">
 </div>
 :::
 
@@ -62,7 +62,7 @@ $$
 :::
 
 ::: {}
-![](assets/images/takingdemostration.gif){width=100%}
+![](assets/photos/taking_demonstration.gif){width=100%}
 :::
 :::
 
@@ -86,7 +86,7 @@ Of course, demonstrations are not magic. They are biased samples of behavior. Th
 :::
 
 <div class="motivation-schematic">
-<img src="figures/demonstrations_to_control.svg" alt="Pipeline from expert demonstrations to learned policy to controller interface to robot task.">
+<img src="assets/figures/demonstrations_to_control.svg" alt="Pipeline from expert demonstrations to learned policy to controller interface to robot task.">
 </div>
 :::
 

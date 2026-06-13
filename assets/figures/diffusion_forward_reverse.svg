@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520" role="img" aria-labelledby="title desc">
+  <title id="title">Forward noising and reverse denoising</title>
+  <desc id="desc">A clean action trajectory is corrupted by Gaussian noise and a learned model denoises it back to a structured trajectory.</desc>
+  <defs>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#0891b2"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fbff; }
+      .label { font: 700 26px sans-serif; fill: #12213f; }
+      .small { font: 500 18px sans-serif; fill: #637083; }
+      .eq { font: 700 21px monospace; fill: #12213f; }
+      .panel { fill: #ffffff; stroke: #d8e2f0; stroke-width: 2; rx: 14; }
+      .axis { stroke: #637083; stroke-width: 2; }
+      .clean { stroke: #2563eb; stroke-width: 5; fill: none; stroke-linecap: round; }
+      .noisy { stroke: #dc2626; stroke-width: 3; fill: none; stroke-linecap: round; opacity: 0.85; }
+      .noise { stroke: #94a3b8; stroke-width: 2; fill: none; stroke-linecap: round; opacity: 0.9; }
+      .fwd { stroke: #2563eb; stroke-width: 5; fill: none; marker-end: url(#arrow-blue); }
+      .rev { stroke: #0891b2; stroke-width: 5; fill: none; marker-end: url(#arrow-teal); }
+    </style>
+  </defs>
+  <rect class="bg" width="1100" height="520"/>
+  <text class="label" x="550" y="42" text-anchor="middle">Diffusion time k is not robot time t</text>
+
+  <g transform="translate(45,90)">
+    <rect class="panel" width="170" height="230"/>
+    <text class="label" x="85" y="38" text-anchor="middle">x0</text>
+    <text class="small" x="85" y="66" text-anchor="middle">expert chunk</text>
+    <line class="axis" x1="30" y1="178" x2="142" y2="178"/>
+    <line class="axis" x1="30" y1="178" x2="30" y2="92"/>
+    <path class="clean" d="M35 160 C55 115, 80 140, 100 95 S135 92, 145 125"/>
+  </g>
+  <g transform="translate(260,90)">
+    <rect class="panel" width="170" height="230"/>
+    <text class="label" x="85" y="38" text-anchor="middle">xk</text>
+    <text class="small" x="85" y="66" text-anchor="middle">partly noisy</text>
+    <line class="axis" x1="30" y1="178" x2="142" y2="178"/>
+    <line class="axis" x1="30" y1="178" x2="30" y2="92"/>
+    <path class="noisy" d="M35 158 C55 115, 77 150, 97 102 S130 85, 145 135"/>
+    <path class="noise" d="M35 150 L45 170 L55 128 L68 146 L80 118 L94 146 L108 105 L123 130 L138 96 L145 124"/>
+  </g>
+  <g transform="translate(475,90)">
+    <rect class="panel" width="170" height="230"/>
+    <text class="label" x="85" y="38" text-anchor="middle">xK</text>
+    <text class="small" x="85" y="66" text-anchor="middle">near Gaussian</text>
+    <line class="axis" x1="30" y1="178" x2="142" y2="178"/>
+    <line class="axis" x1="30" y1="178" x2="30" y2="92"/>
+    <path class="noise" d="M34 116 L43 168 L52 98 L63 180 L75 112 L87 154 L101 92 L113 175 L126 108 L141 158"/>
+    <path class="noise" d="M34 158 L45 104 L57 172 L70 96 L84 170 L96 119 L110 184 L124 102 L141 145"/>
+  </g>
+
+  <path class="fwd" d="M130 350 C250 395, 445 395, 560 350"/>
+  <text class="label" x="345" y="420" text-anchor="middle">fixed forward process q(xk | x0)</text>
+  <text class="eq" x="345" y="452" text-anchor="middle">xk = sqrt(a_bar_k) x0 + sqrt(1 - a_bar_k) eps</text>
+
+  <g transform="translate(740,90)">
+    <rect class="panel" width="315" height="230"/>
+    <text class="label" x="158" y="40" text-anchor="middle">learned reverse process</text>
+    <text class="small" x="158" y="72" text-anchor="middle">conditioned on observations c</text>
+    <rect x="32" y="104" width="250" height="58" fill="#e0f2fe" stroke="#0891b2" stroke-width="3" rx="10"/>
+    <text class="eq" x="157" y="140" text-anchor="middle">eps_theta(xk, k, c)</text>
+    <path class="rev" d="M276 185 C210 214, 104 214, 38 185"/>
+    <text class="small" x="157" y="215" text-anchor="middle">iterative denoising to recover x0</text>
+  </g>
+
+  <path class="rev" d="M790 350 C700 395, 615 395, 525 350"/>
+  <text class="label" x="685" y="452" text-anchor="middle">sampling: xK -> ... -> x0</text>
+</svg>

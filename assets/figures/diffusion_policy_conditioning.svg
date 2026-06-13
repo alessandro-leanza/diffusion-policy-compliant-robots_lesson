@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" role="img" aria-labelledby="title desc">
+  <title id="title">Diffusion Policy conditioning architecture</title>
+  <desc id="desc">Observation history and diffusion timestep condition a 1D U-Net denoiser through FiLM to predict action noise.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#2563eb"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fbff; }
+      .box { fill: #ffffff; stroke: #d8e2f0; stroke-width: 2; rx: 12; }
+      .blue { fill: #dbeafe; stroke: #2563eb; }
+      .teal { fill: #e0f2fe; stroke: #0891b2; }
+      .amber { fill: #fffbeb; stroke: #f59e0b; }
+      .green { fill: #ecfdf5; stroke: #16a34a; }
+      .red { fill: #fef2f2; stroke: #dc2626; }
+      .line { stroke: #2563eb; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .label { font: 700 25px sans-serif; fill: #12213f; }
+      .body { font: 500 20px sans-serif; fill: #1f2937; }
+      .small { font: 500 17px sans-serif; fill: #637083; }
+      .mono { font: 700 19px monospace; fill: #12213f; }
+    </style>
+  </defs>
+  <rect class="bg" width="1100" height="560"/>
+
+  <rect class="box blue" x="55" y="70" width="240" height="120"/>
+  <text class="label" x="175" y="112" text-anchor="middle">observation window</text>
+  <text class="mono" x="175" y="148" text-anchor="middle">o[t-To:t]</text>
+  <text class="small" x="175" y="176" text-anchor="middle">images, proprioception, force</text>
+
+  <rect class="box teal" x="55" y="250" width="240" height="105"/>
+  <text class="label" x="175" y="292" text-anchor="middle">diffusion step</text>
+  <text class="mono" x="175" y="326" text-anchor="middle">k</text>
+
+  <rect class="box amber" x="365" y="90" width="230" height="245"/>
+  <text class="label" x="480" y="135" text-anchor="middle">conditioning MLPs</text>
+  <text class="body" x="480" y="184" text-anchor="middle">obs embedding</text>
+  <text class="body" x="480" y="228" text-anchor="middle">sinusoidal time embedding</text>
+  <text class="mono" x="480" y="284" text-anchor="middle">cond = concat(...)</text>
+
+  <rect class="box red" x="365" y="400" width="230" height="90"/>
+  <text class="label" x="480" y="436" text-anchor="middle">noisy action chunk</text>
+  <text class="mono" x="480" y="470" text-anchor="middle">A_k in R^(Da x H)</text>
+
+  <rect class="box green" x="675" y="80" width="325" height="430"/>
+  <text class="label" x="838" y="122" text-anchor="middle">conditional 1D U-Net</text>
+  <rect class="box" x="720" y="160" width="235" height="56"/>
+  <text class="body" x="838" y="196" text-anchor="middle">Conv1D + ResBlocks</text>
+  <rect class="box" x="720" y="238" width="235" height="56"/>
+  <text class="body" x="838" y="274" text-anchor="middle">FiLM scale/shift</text>
+  <rect class="box" x="720" y="316" width="235" height="56"/>
+  <text class="body" x="838" y="352" text-anchor="middle">down/up temporal path</text>
+  <rect class="box" x="720" y="416" width="235" height="56"/>
+  <text class="mono" x="838" y="452" text-anchor="middle">eps_theta(A_k,k,c)</text>
+
+  <path class="line" d="M295 130 L365 185"/>
+  <path class="line" d="M295 302 L365 245"/>
+  <path class="line" d="M595 214 L675 265"/>
+  <path class="line" d="M595 445 L675 445"/>
+
+  <text class="small" x="838" y="535" text-anchor="middle">training target: predict the Gaussian noise added to expert actions</text>
+</svg>

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520" role="img" aria-labelledby="title desc">
+  <title id="title">Diffusion architecture bridge</title>
+  <desc id="desc">Different tensor structures use different denoising backbones: 2D U-Net for images, 1D U-Net for trajectories, and Transformers for long-range structure.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#2563eb"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fbff; }
+      .panel { fill: #ffffff; stroke: #d8e2f0; stroke-width: 2; rx: 14; }
+      .label { font: 700 25px sans-serif; fill: #12213f; }
+      .body { font: 500 19px sans-serif; fill: #1f2937; }
+      .small { font: 500 16px sans-serif; fill: #637083; }
+      .mono { font: 700 18px monospace; fill: #12213f; }
+      .blue { fill: #dbeafe; stroke: #2563eb; stroke-width: 3; rx: 10; }
+      .green { fill: #ecfdf5; stroke: #16a34a; stroke-width: 3; rx: 10; }
+      .amber { fill: #fffbeb; stroke: #f59e0b; stroke-width: 3; rx: 10; }
+      .purple { fill: #f3e8ff; stroke: #9333ea; stroke-width: 3; rx: 10; }
+      .line { stroke: #2563eb; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect class="bg" width="1100" height="520"/>
+
+  <rect class="panel" x="45" y="70" width="305" height="355"/>
+  <text class="label" x="198" y="112" text-anchor="middle">2D U-Net</text>
+  <text class="small" x="198" y="142" text-anchor="middle">image denoising backbone</text>
+  <rect class="blue" x="95" y="180" width="205" height="44"/>
+  <rect class="blue" x="115" y="236" width="165" height="44"/>
+  <rect class="blue" x="135" y="292" width="125" height="44"/>
+  <rect class="blue" x="115" y="348" width="165" height="44"/>
+  <text class="body" x="198" y="207" text-anchor="middle">spatial convs</text>
+  <text class="body" x="198" y="263" text-anchor="middle">downsample</text>
+  <text class="body" x="198" y="319" text-anchor="middle">bottleneck</text>
+  <text class="body" x="198" y="375" text-anchor="middle">upsample + skips</text>
+
+  <rect class="panel" x="397" y="70" width="305" height="355"/>
+  <text class="label" x="550" y="112" text-anchor="middle">1D U-Net</text>
+  <text class="small" x="550" y="142" text-anchor="middle">Diffusion Policy action chunks</text>
+  <rect class="green" x="447" y="180" width="205" height="44"/>
+  <rect class="green" x="467" y="236" width="165" height="44"/>
+  <rect class="green" x="487" y="292" width="125" height="44"/>
+  <rect class="green" x="467" y="348" width="165" height="44"/>
+  <text class="body" x="550" y="207" text-anchor="middle">temporal convs</text>
+  <text class="body" x="550" y="263" text-anchor="middle">horizon context</text>
+  <text class="body" x="550" y="319" text-anchor="middle">FiLM conditioning</text>
+  <text class="body" x="550" y="375" text-anchor="middle">sequence output</text>
+
+  <rect class="panel" x="750" y="70" width="305" height="355"/>
+  <text class="label" x="903" y="112" text-anchor="middle">Transformer / DiT</text>
+  <text class="small" x="903" y="142" text-anchor="middle">global attention, higher data cost</text>
+  <rect class="purple" x="800" y="180" width="205" height="44"/>
+  <rect class="purple" x="800" y="236" width="205" height="44"/>
+  <rect class="purple" x="800" y="292" width="205" height="44"/>
+  <rect class="purple" x="800" y="348" width="205" height="44"/>
+  <text class="body" x="903" y="207" text-anchor="middle">tokenize / patchify</text>
+  <text class="body" x="903" y="263" text-anchor="middle">self-attention blocks</text>
+  <text class="body" x="903" y="319" text-anchor="middle">long-range coupling</text>
+  <text class="body" x="903" y="375" text-anchor="middle">decode output</text>
+
+  <path class="line" d="M350 248 L397 248"/>
+  <path class="line" d="M702 248 L750 248"/>
+  <rect x="220" y="455" width="660" height="48" fill="#ffffff" stroke="#2563eb" stroke-width="3" rx="12"/>
+  <text class="mono" x="550" y="486" text-anchor="middle">same loss: || eps - eps_theta(x_k, k, c) ||^2</text>
+</svg>

@@ -9,6 +9,7 @@ format:
     chalkboard: true
     incremental: false
     transition: slide
+    navigation-mode: vertical
     width: 1600
     height: 900
     smaller: true

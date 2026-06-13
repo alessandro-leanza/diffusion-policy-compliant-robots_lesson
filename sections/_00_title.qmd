@@ -91,5 +91,5 @@ Warning: clarify that $t$ is robot/control time, while diffusion denoising steps
 
 ::: {.figure-placeholder}
 <div class="placeholder-title">Lecture timing diagram</div>
-<div class="placeholder-path">figures/lecture_timing.png</div>
+<div class="placeholder-path">assets/figures/lecture_timing.png</div>
 :::

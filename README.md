@@ -47,9 +47,11 @@ Used for: AI Applications to Industrial Robotics, PhD Course at Politecnico di M
 - `custom.scss`: minimal academic Quarto/reveal.js theme for the slides
 - `sections/`: modular slide sections included by `slides.qmd`
 - `references.bib`: bibliography entries
-- `assets/images/`: image assets used in the slides
+- `assets/figures/`: diagrams, plots, and conceptual visuals used in the slides
+- `assets/photos/`: photos, screenshots, and GIF examples used in the slides
+- `assets/logos/`: institutional and project logos
 - `assets/videos/`: video assets used in the slides
-- `figures/`: generated or exported figures
+- `assets/prompts/`: visual prompt notes for future assets
 - `scripts/`: helper scripts
 - `handouts/`: optional teaching material
 
@@ -67,8 +69,12 @@ Render the reveal.js HTML slides:
 quarto render slides.qmd --to revealjs
 ```
 
-Render a PowerPoint version:
+Render the lecture PDF:
 
 ```bash
-quarto render slides.qmd --to pptx
+scripts/render_pdf.sh
 ```
+
+PowerPoint export is not a supported canonical output for this deck. The slides
+use reveal.js-specific layout and `custom.scss`, which do not translate
+faithfully with `quarto render slides.qmd --to pptx`.

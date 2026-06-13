@@ -3,6 +3,7 @@
 slides.html
 slides.pdf
 slides.pptx
+.~lock.*#
 *.log
 __pycache__/
 .DS_Store

@@ -42,6 +42,10 @@ $code-block-border-color: #d8e2f0;
   box-sizing: border-box;
 }
 
+.reveal .slides > section.stack.present {
+  top: 0 !important;
+}
+
 .reveal h1,
 .reveal h2,
 .reveal h3 {
@@ -123,9 +127,11 @@ $code-block-border-color: #d8e2f0;
 .reveal section#title-slide.quarto-title-block,
 .reveal section.cover-slide,
 .reveal section.section-divider {
+  box-sizing: border-box;
   display: flex !important;
   flex-direction: column;
-  min-height: 900px;
+  height: 100%;
+  min-height: 0;
   width: 100%;
   justify-content: center;
 }
@@ -233,7 +239,7 @@ $code-block-border-color: #d8e2f0;
 }
 
 .reveal section#title-slide.quarto-title-block::before {
-  background-image: url("../../../../../assets/images/logo_idsia_transparent.png");
+  background-image: url("../../../../../assets/logos/logo_idsia_transparent.png");
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
@@ -341,6 +347,14 @@ $code-block-border-color: #d8e2f0;
   display: grid;
   gap: 1.4em;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+}
+
+.two-column-balanced img {
+  display: block;
+  height: auto;
+  max-height: 13.5em;
+  object-fit: contain;
+  width: 100%;
 }
 
 .compact p,

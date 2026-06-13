@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520" role="img" aria-labelledby="title desc">
+  <title id="title">Sampling steps and latency tradeoff</title>
+  <desc id="desc">Fewer denoising steps reduce latency but may reduce action quality or robustness.</desc>
+  <style>
+    .bg { fill: #f8fbff; }
+    .axis { stroke: #12213f; stroke-width: 3; }
+    .grid { stroke: #d8e2f0; stroke-width: 2; }
+    .label { font: 700 26px sans-serif; fill: #12213f; }
+    .body { font: 500 20px sans-serif; fill: #1f2937; }
+    .small { font: 500 17px sans-serif; fill: #637083; }
+    .curve1 { fill: none; stroke: #2563eb; stroke-width: 6; stroke-linecap: round; }
+    .curve2 { fill: none; stroke: #16a34a; stroke-width: 6; stroke-linecap: round; }
+    .point { stroke: #ffffff; stroke-width: 4; }
+    .box { fill: #ffffff; stroke: #d8e2f0; stroke-width: 2; rx: 12; }
+  </style>
+  <rect class="bg" width="1100" height="520"/>
+
+  <line class="grid" x1="165" y1="110" x2="165" y2="395"/>
+  <line class="grid" x1="335" y1="110" x2="335" y2="395"/>
+  <line class="grid" x1="505" y1="110" x2="505" y2="395"/>
+  <line class="grid" x1="675" y1="110" x2="675" y2="395"/>
+  <line class="grid" x1="845" y1="110" x2="845" y2="395"/>
+  <line class="axis" x1="120" y1="395" x2="930" y2="395"/>
+  <line class="axis" x1="120" y1="395" x2="120" y2="90"/>
+
+  <text class="label" x="525" y="465" text-anchor="middle">number of denoising steps K</text>
+  <text class="label" x="42" y="255" text-anchor="middle" transform="rotate(-90 42 255)">closed-loop suitability</text>
+
+  <path class="curve1" d="M150 350 C280 250, 430 185, 600 150 C740 122, 850 116, 910 115"/>
+  <path class="curve2" d="M150 115 C285 150, 430 215, 610 300 C745 360, 850 383, 910 390"/>
+
+  <circle class="point" cx="235" cy="285" r="12" fill="#0891b2"/>
+  <text class="body" x="255" y="282">DDIM-style fast query</text>
+  <text class="small" x="255" y="310">low latency, must validate quality</text>
+
+  <circle class="point" cx="785" cy="130" r="12" fill="#2563eb"/>
+  <text class="body" x="610" y="95">many-step DDPM</text>
+  <text class="small" x="610" y="122">better refinement, high latency</text>
+
+  <rect class="box" x="620" y="290" width="360" height="92"/>
+  <text class="body" x="800" y="324" text-anchor="middle">Design target</text>
+  <text class="small" x="800" y="354" text-anchor="middle">enough denoising for stable action chunks</text>
+  <text class="small" x="800" y="378" text-anchor="middle">inside the robot timing budget</text>
+
+  <text class="small" x="878" y="424" text-anchor="middle">larger K</text>
+  <text class="small" x="156" y="424" text-anchor="middle">smaller K</text>
+  <text class="small" x="740" y="190" fill="#2563eb">sample quality / consistency</text>
+  <text class="small" x="330" y="170" fill="#16a34a">responsiveness</text>
+</svg>

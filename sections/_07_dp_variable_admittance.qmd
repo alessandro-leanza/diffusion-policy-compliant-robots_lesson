@@ -32,7 +32,7 @@ An admittance controller handles contact response.
 
 ::: {.figure-placeholder}
 <div class="placeholder-title">Policy outputs desired trajectory</div>
-<div class="placeholder-path">figures/dp_outputs_trajectory.png</div>
+<div class="placeholder-path">assets/figures/dp_outputs_trajectory.png</div>
 :::
 
 ::: {.notes}
@@ -61,7 +61,7 @@ The controller then enforces bounds before execution.
 
 ::: {.figure-placeholder}
 <div class="placeholder-title">Policy outputs trajectory and gains</div>
-<div class="placeholder-path">figures/dp_outputs_admittance_parameters.png</div>
+<div class="placeholder-path">assets/figures/dp_outputs_admittance_parameters.png</div>
 :::
 
 ::: {.notes}
@@ -88,7 +88,7 @@ Potential conditioning signals:
 
 ::: {.figure-placeholder}
 <div class="placeholder-title">Multimodal robot sensing</div>
-<div class="placeholder-path">figures/multimodal_robot_sensing.png</div>
+<div class="placeholder-path">assets/figures/multimodal_robot_sensing.png</div>
 :::
 :::
 
@@ -137,7 +137,7 @@ Possible research questions:
 
 ::: {.figure-placeholder}
 <div class="placeholder-title">Research direction system diagram</div>
-<div class="placeholder-path">figures/research_direction_system.png</div>
+<div class="placeholder-path">assets/figures/research_direction_system.png</div>
 :::
 
 ::: {.notes}

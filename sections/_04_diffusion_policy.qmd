@@ -6,45 +6,84 @@ Diffusion Policy generates short-horizon action trajectories:
 
 ::: {.equation-card}
 $$
-\mathbf{a}_{t:t+H}
+\mathbf{A}_{t:t+H}
 \sim
-p_\theta(\mathbf{a}_{t:t+H} \mid \mathbf{o}_{t-T_o:t})
+p_\theta(\mathbf{A}_{t:t+H} \mid \mathbf{o}_{t-T_o:t})
 $$
 :::
 
-This gives the policy temporal structure beyond a single next action.
+The output is not a single command. It is a temporally structured action chunk conditioned on recent observations.
 
 ::: {.notes}
-Main point: Diffusion Policy models a distribution over action chunks conditioned on recent observations.
+Main point: Diffusion Policy models a conditional distribution over action chunks.
 
-Intuition: the chunk captures how actions should unfold over a short horizon, not just the next motor command.
+This is the main conceptual shift from standard behavioral cloning. Instead of predicting one action from one observation, the policy samples a sequence of future actions conditioned on an observation history.
 
-Warning: do not confuse the action horizon $H$ with the diffusion denoising horizon; they are different loops.
+The action chunk can encode approach, contact, recovery, and short-term temporal consistency. The conditioning keeps the sample tied to the current scene and robot state.
+
+Warning: the prediction horizon $H$ is not the diffusion denoising horizon $K$. $H$ lives in robot time; $K$ lives in diffusion sampling time.
 :::
 
 ---
 
-## Action Trajectories Instead of Single Actions
+## Why Action Chunks?
 
 ::: {.two-column-balanced}
 ::: {.compact}
-- A trajectory can encode approach, contact, and recovery phases.
-- Temporal action chunks reduce myopic behavior.
-- Multimodal sequence generation can represent several plausible strategies.
+- Manipulation is not a sequence of independent actions.
+- Contact behavior often depends on short-term history.
+- A chunk can commit to one mode among several plausible strategies.
+- Replanning keeps the policy closed-loop.
 :::
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Action trajectory chunk</div>
-<div class="placeholder-path">figures/action_trajectory_chunk.png</div>
+::: {.equation-card}
+$$
+\mathbf{A}_{t:t+H}
+=
+\left[
+a_t, a_{t+1}, \ldots, a_{t+H}
+\right]
+$$
 :::
 :::
 
 ::: {.notes}
-Main point: action trajectories let the policy express short-term temporal intent.
+Main point: action chunks give the policy temporal structure beyond one-step regression.
 
-Intuition: opening a drawer is not a sequence of independent actions; approach, contact, pull, and recovery are coupled.
+In contact-rich manipulation, the right action often depends on a short sequence: approach, make contact, move along a constraint, recover if contact changes. A one-step policy can still work, but it has less explicit temporal intent.
 
-Warning: a longer chunk is not always better because stale plans may ignore new contact information.
+Diffusion is useful here because it can represent a distribution over entire chunks. If there are multiple valid strategies, sampling can select one coherent trajectory rather than averaging incompatible actions.
+:::
+
+---
+
+## PushT as a Concrete Example
+
+::: {.two-column-balanced}
+::: {.compact}
+A minimal PushT setup from the exercise material uses:
+
+- state: agent pose and block pose
+- observation: agent position and velocity
+- action: relative target displacement
+- prediction horizon: a short action chunk
+
+This is enough to explain the data interface without running the notebook.
+:::
+
+::: {}
+![](assets/figures/pusht_windows.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+Main point: ground the abstract notation in a concrete robotics dataset.
+
+The notebook from Vincenzo's repo uses the PushT dataset. The raw state contains agent position and block state. The simplified exercise feature engineering builds an observation from agent position and finite-difference velocity, and defines the action as a delta target: target position minus current agent position.
+
+For the morning lecture, this is useful as a conceptual example. The exercise can later use the notebook directly, but the lecture should not depend on live dataset loading.
+
+Warning: this simplified observation omits the block state. It is educational, but for stronger performance one would normally include block pose or visual observations.
 :::
 
 ---
@@ -58,131 +97,178 @@ Possible conditioning inputs:
 - RGB or RGB-D images
 - proprioception
 - force/torque measurements
+- tactile signals
 - task labels or language instructions
 :::
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Observation encoder diagram</div>
-<div class="placeholder-path">figures/observation_conditioning.png</div>
+::: {.takeaway}
+Conditioning tells the denoiser which action chunk should emerge from the noise.
 :::
 :::
 
 ::: {.notes}
-Main point: conditioning determines what information the denoiser can use to choose a plausible action trajectory.
+Main point: the diffusion model is conditional in the policy setting.
 
-Intuition: vision may tell the object pose, proprioception tells the robot configuration, and force tells whether contact has occurred.
+Unconditional diffusion would sample action trajectories from the marginal distribution of demonstrations. A robot policy needs the action distribution for the current scene and robot state.
 
-Warning: adding sensors does not automatically help; timing, calibration, and representation quality matter.
+The conditioning path can include image encoders, proprioceptive MLPs, force encoders, or task embeddings. The design choice depends on the task and sensing stack.
+
+Adding sensors is not automatically beneficial. Timing, calibration, and representation quality matter. A poorly synchronized force signal can harm a policy even if force information is conceptually useful.
 :::
 
 ---
 
-## Action Chunking
+## Conditional 1D U-Net Denoiser
 
-- Predict $H$ future actions.
-- Execute only the first $h \le H$ actions.
-- Replan with fresh observations.
+::: {.two-column-balanced}
+::: {.compact}
+The denoising network receives:
 
-This connects diffusion sampling with receding horizon control.
+- noisy action chunk $\mathbf{A}_k$
+- diffusion step $k$
+- observation history $\mathbf{o}_{t-T_o:t}$
 
-::: {.notes}
-Main point: action chunking is the bridge between slow generative sampling and continuous robot execution.
+It predicts the noise in the action chunk:
 
-Intuition: sample a short plan, execute only the beginning, then update with fresh observations.
-
-Warning: students may assume the whole sampled chunk is executed; in receding horizon execution, much of it can be discarded.
+$$
+\epsilon_\theta(\mathbf{A}_k, k, c)
+$$
 :::
 
----
-
-## Receding Horizon Execution
-
-At robot time $t$:
-
-::: {.process-list}
-1. observe the scene
-2. sample an action trajectory
-3. execute the first actions
-4. discard the remainder
-5. replan
+::: {}
+![](assets/figures/diffusion_policy_conditioning.svg){width=100%}
 :::
-
-::: {.figure-placeholder}
-<div class="placeholder-title">Receding horizon timeline</div>
-<div class="placeholder-path">figures/receding_horizon_execution.png</div>
 :::
 
 ::: {.notes}
-Main point: emphasize the closed-loop nature of deployment.
+Main point: explain the architecture used in the Diffusion Policy exercise.
 
-Intuition: this is similar to model predictive control: plan ahead, execute a prefix, replan.
+The action sequence is represented as a one-dimensional temporal signal with action dimension as channels. A 1D U-Net denoises this sequence along the horizon.
 
-Warning: the policy is not purely open-loop just because it outputs a sequence; replanning frequency is essential.
+The observation history and diffusion step are embedded into a conditioning vector. In the notebook, conditioning is injected into residual blocks using FiLM: the conditioning vector produces scale and shift parameters for intermediate features.
+
+This is a clean way to connect the current robot context to every denoising step.
 :::
 
 ---
 
 ## Training Pipeline
 
-- Collect demonstrations.
-- Encode observations.
-- Add noise to expert action chunks.
-- Train the denoising network.
+::: {.process-list}
+1. collect demonstrations
+2. build observation windows and expert action chunks
+3. normalize observations and actions
+4. sample a diffusion step $k$
+5. add Gaussian noise to the expert action chunk
+6. train the model to predict the injected noise
+:::
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Diffusion Policy training pipeline</div>
-<div class="placeholder-path">figures/diffusion_policy_training.png</div>
+::: {.equation-card}
+$$
+\mathcal{L}_{policy}
+=
+\mathbb{E}
+\left[
+\lVert
+\epsilon - \epsilon_\theta(\mathbf{A}_k, k, \mathbf{o}_{t-T_o:t})
+\rVert^2
+\right]
+$$
 :::
 
 ::: {.notes}
-Main point: training denoises expert action chunks conditioned on observations.
+Main point: training is supervised denoising of expert action chunks.
 
-Intuition: the model sees a corrupted expert trajectory and learns how to recover the original expert-like chunk.
+The dataset provides clean action chunks. During training, we corrupt them with the forward diffusion process and ask the network to recover the noise. Because the clean chunk came from an expert demonstration, denoising learns the structure of expert-like actions.
 
-Warning: training quality depends heavily on demonstration diversity and alignment between observations and actions.
+Normalization is not a minor detail. Diffusion assumes that the data scale is compatible with Gaussian noise. Poorly scaled actions can make the denoising problem ill-conditioned.
 :::
 
 ---
 
 ## Inference Pipeline
 
-- Encode current observations.
-- Initialize noisy action trajectory.
-- Iteratively denoise.
-- Send selected actions to the controller.
+At robot time $t$:
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Diffusion Policy inference pipeline</div>
-<div class="placeholder-path">figures/diffusion_policy_inference.png</div>
+::: {.process-list}
+1. encode the current observation history
+2. initialize a random action chunk
+3. iteratively denoise it with the conditional model
+4. denormalize the sampled actions
+5. execute a prefix of the chunk
+:::
+
+::: {.takeaway}
+The policy constructs an action sequence through iterative refinement rather than a single forward prediction.
 :::
 
 ::: {.notes}
-Main point: inference starts from noise and repeatedly denoises toward an executable action chunk.
+Main point: inference is the reverse diffusion loop applied to actions.
 
-Intuition: the policy constructs an action sequence through iterative refinement rather than a single forward prediction.
+The robot starts from noise in action space, not from a previous plan. The conditioning information guides the denoising process toward an action chunk that is plausible under the current observation.
 
-Warning: this iterative process is exactly why latency becomes a design constraint for robot control.
+This iterative process is exactly why inference efficiency becomes important. Sampling quality and latency are coupled by the number of denoising steps.
 :::
 
 ---
 
-## Demonstration Video Placeholder
+## Receding Horizon Execution
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Diffusion Policy robot demo video</div>
-<div class="placeholder-path">assets/videos/diffusion_policy_demo.mp4</div>
+::: {.two-column-balanced}
+::: {.compact}
+The robot usually does not execute the whole sampled chunk.
+
+- sample $H$ future actions
+- execute only the first $h \le H$
+- observe again
+- sample a new chunk
+
+This makes the policy closed-loop despite sequence outputs.
 :::
 
-```{=html}
-<!-- Example future syntax:
-<video controls src="assets/videos/diffusion_policy_demo.mp4"></video>
--->
-```
+::: {.equation-card}
+$$
+\mathbf{A}_{t:t+H}
+\rightarrow
+\left[
+a_t,\ldots,a_{t+h}
+\right]
+\quad\text{then replan}
+$$
+:::
+:::
 
 ::: {.notes}
-Main point: use the demo to connect the abstract pipeline to visible robot behavior.
+Main point: action chunking is connected to receding horizon control.
 
-Intuition: ask students to watch for temporal coherence, recovery after small disturbances, and contact transitions.
+This is similar in spirit to model predictive control: plan ahead, execute a prefix, then replan with fresh observations. The future part of the sampled chunk is useful because it gives the prefix temporal coherence, but it does not have to be executed open-loop.
 
-Warning: videos can hide failures and reset costs; do not treat a successful clip as complete evidence of robustness.
+The execution horizon is a design parameter. If it is too long, the robot may follow stale actions after contact conditions change. If it is too short, inference cost may dominate the loop.
+:::
+
+---
+
+## What This Gives Us
+
+::: {.two-column-balanced}
+::: {.compact}
+Compared with deterministic behavioral cloning, Diffusion Policy gives:
+
+- multimodal continuous-action modeling
+- coherent short-horizon plans
+- conditioning on rich observations
+- a natural bridge to receding horizon execution
+:::
+
+::: {.warning}
+The price is inference cost. A diffusion policy is a controller only after sampling, timing, and low-level execution are engineered carefully.
+:::
+:::
+
+::: {.notes}
+Main point: summarize the value proposition and transition to inference efficiency.
+
+Diffusion Policy is powerful because it turns imitation learning into conditional generative modeling over action sequences. It directly addresses multimodal demonstrations and temporal coherence.
+
+But the policy is not complete just because the network can sample plausible chunks. On a robot, we must decide how many denoising steps to use, how often to replan, how to execute the sampled actions, and how to preserve safety under contact.
 :::

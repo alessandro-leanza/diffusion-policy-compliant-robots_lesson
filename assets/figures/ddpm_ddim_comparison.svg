@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520" role="img" aria-labelledby="title desc">
+  <title id="title">DDPM and DDIM sampling comparison</title>
+  <desc id="desc">DDPM uses stochastic many-step sampling, while DDIM can use fewer deterministic or partially stochastic steps.</desc>
+  <defs>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#0891b2"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fbff; }
+      .panel { fill: #ffffff; stroke: #d8e2f0; stroke-width: 2; rx: 14; }
+      .label { font: 700 28px sans-serif; fill: #12213f; }
+      .body { font: 500 20px sans-serif; fill: #1f2937; }
+      .small { font: 500 17px sans-serif; fill: #637083; }
+      .mono { font: 700 18px monospace; fill: #12213f; }
+      .blue { fill: #dbeafe; stroke: #2563eb; stroke-width: 3; rx: 10; }
+      .teal { fill: #e0f2fe; stroke: #0891b2; stroke-width: 3; rx: 10; }
+      .noise { fill: #fef2f2; stroke: #dc2626; stroke-width: 2; }
+      .arrow-blue { stroke: #2563eb; stroke-width: 4; fill: none; marker-end: url(#arrow-blue); }
+      .arrow-teal { stroke: #0891b2; stroke-width: 4; fill: none; marker-end: url(#arrow-teal); }
+    </style>
+  </defs>
+  <rect class="bg" width="1100" height="520"/>
+
+  <rect class="panel" x="55" y="70" width="470" height="350"/>
+  <text class="label" x="290" y="112" text-anchor="middle">DDPM</text>
+  <text class="small" x="290" y="145" text-anchor="middle">stochastic reverse Markov chain</text>
+  <rect class="blue" x="100" y="195" width="70" height="58"/>
+  <rect class="blue" x="205" y="195" width="70" height="58"/>
+  <rect class="blue" x="310" y="195" width="70" height="58"/>
+  <rect class="blue" x="415" y="195" width="70" height="58"/>
+  <path class="arrow-blue" d="M485 224 L390 224"/>
+  <path class="arrow-blue" d="M380 224 L285 224"/>
+  <path class="arrow-blue" d="M275 224 L180 224"/>
+  <text class="mono" x="135" y="232" text-anchor="middle">x0</text>
+  <text class="mono" x="240" y="232" text-anchor="middle">x1</text>
+  <text class="mono" x="345" y="232" text-anchor="middle">...</text>
+  <text class="mono" x="450" y="232" text-anchor="middle">xK</text>
+  <circle class="noise" cx="338" cy="283" r="13"/>
+  <circle class="noise" cx="233" cy="283" r="13"/>
+  <text class="body" x="290" y="330" text-anchor="middle">many network evaluations</text>
+  <text class="mono" x="290" y="365" text-anchor="middle">x[k-1] = mu_theta(x[k],k) + sigma[k] z</text>
+
+  <rect class="panel" x="575" y="70" width="470" height="350"/>
+  <text class="label" x="810" y="112" text-anchor="middle">DDIM</text>
+  <text class="small" x="810" y="145" text-anchor="middle">non-Markovian trajectory, eta controls noise</text>
+  <rect class="teal" x="625" y="195" width="70" height="58"/>
+  <rect class="teal" x="760" y="195" width="70" height="58"/>
+  <rect class="teal" x="895" y="195" width="70" height="58"/>
+  <path class="arrow-teal" d="M965 224 L840 224"/>
+  <path class="arrow-teal" d="M830 224 L705 224"/>
+  <text class="mono" x="660" y="232" text-anchor="middle">x0</text>
+  <text class="mono" x="795" y="232" text-anchor="middle">tau1</text>
+  <text class="mono" x="930" y="232" text-anchor="middle">xK</text>
+  <text class="body" x="810" y="330" text-anchor="middle">fewer, larger denoising jumps</text>
+  <text class="mono" x="810" y="365" text-anchor="middle">eta = 0 gives deterministic updates</text>
+
+  <rect x="175" y="450" width="750" height="52" fill="#ffffff" stroke="#2563eb" stroke-width="3" rx="12"/>
+  <text class="body" x="550" y="484" text-anchor="middle">For robot policies, sampler choice is a latency-quality-control tradeoff.</text>
+</svg>

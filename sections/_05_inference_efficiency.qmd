@@ -5,115 +5,245 @@
 ::: {.two-column-balanced}
 ::: {.compact}
 - Control loops have strict timing budgets.
-- Slow inference increases tracking error and reaction delay.
+- Slow inference increases reaction delay.
 - Contact-rich tasks may require fast corrections.
+- Worst-case latency matters more than nice average timing.
 :::
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Control-loop latency budget</div>
-<div class="placeholder-path">figures/control_loop_latency.png</div>
+::: {}
+![](assets/figures/control_loop_latency.svg){width=100%}
 :::
 :::
 
 ::: {.notes}
-Main point: latency is a control variable, not only a software performance metric.
+Main point: latency is a control issue, not only a software performance metric.
 
-Intuition: if the robot reacts late to contact, even a good planned action may arrive after the physical situation has changed.
+If a robot reacts late, the physical situation may already have changed. This is especially true around contact, where small delays can create large force errors or make the robot continue pushing after it should have adapted.
 
-Warning: high average frame rate is not enough; worst-case timing and jitter matter in control loops.
+For diffusion policies, the denoising loop is often the dominant cost. But the total query time also includes sensing, observation encoding, communication, synchronization, and low-level execution.
 :::
 
 ---
 
 ## Denoising Steps vs Latency
 
-Let $K$ be the number of denoising steps. A rough latency model is:
+Let $K$ be the number of denoising steps and $T_{net}$ the cost of one denoising network evaluation:
+
+::: {.equation-card}
+$$
+T_{infer}
+\approx
+K \cdot T_{net}
+$$
+:::
+
+For a policy query, a more realistic budget is:
 
 $$
-T_{infer} \approx K \cdot T_{net}
+T_{query}
+=
+T_{sense}
++
+T_{enc}
++
+K T_{net}
++
+T_{comm}
 $$
-
-where $T_{net}$ is the time for one denoising network evaluation.
 
 ::: {.notes}
-Main point: the number of denoising steps multiplies the cost of one network pass.
+Main point: the number of denoising steps multiplies the neural network cost.
 
-Intuition: if one denoising step takes 5 ms, 20 steps already cost about 100 ms before accounting for sensing and control overhead.
+This simple equation is useful for intuition. If one denoising pass takes 4 ms, then 50 steps already cost about 200 ms before sensing and communication. That may be acceptable for slow tabletop behavior, but not for fast contact correction.
 
-Warning: this equation is a simplification; batching, GPU synchronization, encoders, and communication can dominate in practice.
+The approximation hides implementation details. GPU synchronization, batch size, camera pipelines, and CPU-GPU transfer can dominate in practice. Still, $K$ is the first design knob to inspect.
 :::
 
 ---
 
-## DDIM and Fewer Sampling Steps
+## DDPM Sampling Cost
 
-- DDIM-style sampling can reduce the number of denoising steps.
-- Fewer steps reduce latency.
-- The risk is lower action quality or less stable behavior.
+DDPM sampling uses many small stochastic reverse steps:
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Quality-latency curve</div>
-<div class="placeholder-path">figures/sampling_steps_latency.png</div>
+::: {.equation-card}
+$$
+x_{k-1}
+=
+\mu_\theta(x_k,k)
++
+\sigma_k z,
+\qquad
+z \sim \mathcal{N}(0,I)
+$$
+:::
+
+::: {.two-column-balanced}
+::: {.compact}
+Benefits:
+
+- faithful to the original probabilistic sampler
+- smooth incremental refinement
+
+Costs:
+
+- many network evaluations
+- stochasticity can add rollout variability
+- hard to fit into fast control loops
+:::
+
+::: {.warning}
+A sampler that is excellent for offline generation can be too slow for online control.
+:::
 :::
 
 ::: {.notes}
-Main point: fewer sampling steps are attractive, but they change the learned policy's behavior.
+Main point: DDPM is the baseline sampler but is often expensive.
 
-Intuition: taking fewer denoising steps is like making larger jumps during refinement; it may be faster but less precise.
+The stochastic term is part of the reverse process. In robot action space, stochastic sampling is not automatically bad, because multimodality can be useful. But uncontrolled variability and long inference time are both deployment concerns.
 
-Warning: do not evaluate samplers only by visual smoothness or offline loss; test closed-loop behavior on the task.
+For a lecture, DDPM is the clean starting point. For a robot, we usually ask how many steps are really necessary.
+:::
+
+---
+
+## DDIM for Fewer Steps
+
+DDIM uses a non-Markovian reverse trajectory and can skip diffusion timesteps:
+
+::: {.two-column-balanced}
+::: {.compact}
+- same training objective as DDPM-style noise prediction
+- fewer denoising evaluations at inference
+- deterministic when the stochasticity parameter is zero
+- useful for latency-constrained policy queries
+:::
+
+::: {}
+![](assets/figures/ddpm_ddim_comparison.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+Main point: DDIM is a practical acceleration path.
+
+The key idea is that we do not necessarily need to traverse every reverse step. DDIM defines a trajectory through a subset of timesteps. With zero stochasticity, the sample is determined by the initial noise and network predictions.
+
+In the PushT notebook, the contrast is educational: a DDPM sampler may use around 100 steps, while a DDIM sampler can demonstrate a much smaller number such as 10 steps. The exact number is a design and validation choice, not a universal constant.
+:::
+
+---
+
+## Quality, Latency, and Stability
+
+::: {.two-column-balanced}
+::: {.compact}
+Reducing $K$ improves latency, but can change behavior:
+
+- less refinement of the action chunk
+- possible lower task success
+- possible rougher trajectories
+- different closed-loop stability properties
+
+The right sampler is task- and hardware-dependent.
+:::
+
+::: {}
+![](assets/figures/sampling_steps_latency.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+Main point: fewer steps are not automatically better.
+
+For image generation, we may judge the output visually. For robot policies, we must test closed-loop behavior. A visually smooth action chunk can still be unsafe or ineffective if it reacts too late, violates force constraints, or creates unstable contact.
+
+The design target is not maximum generative quality in isolation. The target is enough action quality inside the timing and safety constraints of the robot.
 :::
 
 ---
 
 ## Action Chunking and Replanning Frequency
 
-- Larger chunks amortize inference cost over multiple control steps.
-- Smaller execution horizons react faster to new observations.
-- The design choice depends on task dynamics and contact uncertainty.
+Action chunking amortizes inference cost:
+
+::: {.equation-card}
+$$
+\text{query once}
+\rightarrow
+\text{execute } h \text{ actions}
+\rightarrow
+\text{query again}
+$$
+:::
+
+Tradeoff:
+
+- larger $h$: lower query frequency, more stale actions
+- smaller $h$: more reactive, higher inference burden
+- larger $H$: more temporal context, harder sequence modeling
 
 ::: {.notes}
-Main point: chunk size and replanning frequency are a latency-reactivity tradeoff.
+Main point: inference efficiency is also controlled by execution horizon and replanning frequency.
 
-Intuition: slow, predictable tasks can tolerate longer chunks; fast contact changes require more frequent replanning.
+If sampling is expensive, we can execute more actions per query. This amortizes inference cost, but it also means the robot follows an older plan for longer. In contact, this can be risky.
 
-Warning: executing too much of an old chunk can turn a closed-loop policy into an effectively open-loop controller.
+The prediction horizon $H$ and execution horizon $h$ should be chosen together with the sampler. They are part of the control design, not only the machine learning architecture.
 :::
 
 ---
 
-## Pruning and Distillation
+## Model-Side Acceleration
 
-Placeholder topics:
+Sampler changes are only one option. Other directions include:
 
-- smaller denoising networks
-- policy distillation
-- consistency-style sampling
-- hardware-aware deployment
+- smaller 1D U-Net backbones
+- lower-dimensional action parameterizations
+- policy distillation into a feed-forward policy
+- consistency-style or few-step diffusion samplers
+- hardware-aware deployment and compilation
+
+::: {.takeaway}
+Acceleration is useful only if the closed-loop robot behavior remains stable, reactive, and task competent.
+:::
+
+::: {.notes}
+Main point: give a broader menu of acceleration strategies.
+
+Reducing the number of denoising steps is the most direct approach, but it is not the only one. We can also simplify the network, reduce the action representation, distill a multi-step sampler into a faster policy, or optimize deployment.
+
+The evaluation criterion must remain closed-loop robot behavior. Offline denoising loss and sample appearance are not enough.
+:::
 
 ---
 
-## Slow-Fast Policy Placeholder
-
-Potential architecture:
+## Slow-Fast Policy Interface
 
 ::: {.two-column-balanced}
 ::: {.compact}
-- a slow diffusion policy proposes temporally coherent plans
-- a fast local controller tracks, filters, or corrects actions
-- compliance parameters adapt at a higher control rate
+A useful robotics pattern:
+
+- a slower diffusion policy proposes coherent action chunks
+- a faster low-level controller tracks or filters commands
+- compliance control reacts quickly to measured interaction forces
 :::
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Slow-fast control architecture</div>
-<div class="placeholder-path">figures/slow_fast_policy.png</div>
+::: {.equation-card}
+$$
+\begin{aligned}
+\text{diffusion policy}
+&\rightarrow
+\text{reference motion} \\
+&\rightarrow
+\text{compliant controller}
+\end{aligned}
+$$
 :::
 :::
 
 ::: {.notes}
-Main point: separate high-level trajectory generation from faster local correction.
+Main point: transition from inference efficiency to compliant control.
 
-Intuition: the diffusion model can plan at a slower rate while an admittance or impedance layer reacts quickly to forces.
+If the diffusion policy cannot run at the same rate as the low-level control loop, we should not force it to be the only control mechanism. A more realistic architecture is hierarchical: the diffusion policy proposes a motion or action chunk, and a faster compliant controller handles immediate physical interaction.
 
-Warning: the interface between slow and fast layers must be designed carefully; otherwise the layers can fight each other.
+This motivates the next section. For compliant robots, the action may be more than a target position. It can also include stiffness, damping, or admittance parameters that determine how the robot physically responds to contact.
 :::
