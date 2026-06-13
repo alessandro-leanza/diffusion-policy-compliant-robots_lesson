@@ -1,20 +1,56 @@
-# Imitation Learning
+# Imitation Learning {.section-divider}
 
 ## Minimal Setup
 
-Imitation learning aims to learn a policy from expert demonstrations:
+::: {.two-column-balanced}
+::: {.compact}
+- We observe expert demonstrations of the task.
+- Each demonstration provides observations and actions.
+- The goal is to learn a policy that reproduces expert-like behavior.
 
+$$
+\mathcal{D}
+=
+\left\{
+\tau_i
+\right\}_{i=1}^{M},
+\qquad
+\tau_i =
+\left[
+(o_1,a_1),\ldots,(o_T,a_T)
+\right]
+$$
+:::
+
+::: {.equation-card}
 $$
 \pi_\theta(a_t \mid o_t)
 $$
 
 where $o_t$ is the robot observation and $a_t$ is the expert action.
+:::
+:::
+
+
+::: {.notes}
+The first thing I want to make precise is the object we are learning. In imitation learning, we assume that someone, or some system, can demonstrate the task. From those demonstrations we record trajectories: observations and actions over time.
+
+The observation $o_t$ may be an image, joint positions, end-effector pose, force-torque measurements, tactile signals, language instructions, or a combination of these. The action $a_t$ may be a joint velocity, an end-effector displacement, a target pose, a gripper command, or a lower-level control parameter.
+
+So the policy $\pi_\theta$ is the learned mapping from what the robot senses to what the expert would do. I write it probabilistically, $\pi_\theta(a_t \mid o_t)$, because later we will care about distributions over actions, not only one deterministic prediction.
+
+One useful warning here is that $o_t$ is not necessarily the true state of the world. In robotics, the true state may include hidden contact conditions, object pose uncertainty, friction, or deformation. The policy only receives the information we choose to measure and represent.
+:::
 
 ---
 
 ## Behavioral Cloning
 
-Behavioral cloning casts imitation learning as supervised learning:
+::: {.two-column-balanced}
+::: {.compact}
+- Treat expert actions as supervised learning targets.
+- Fit the policy on samples from the demonstration dataset.
+- Simple, scalable, and often the first baseline to try.
 
 $$
 \mathcal{L}_{BC}(\theta)
@@ -24,48 +60,154 @@ $$
 \lVert \pi_\theta(o_t) - a_t \rVert^2
 \right]
 $$
+:::
 
-TODO: Insert diagram of supervised policy learning at `figures/behavioral_cloning_pipeline.png`.
+::: {}
+![](figures/behavioral_cloning_pipeline.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+Behavioral cloning is the most direct imitation learning method. We take the dataset of expert observation-action pairs and train a model by supervised learning. In the simplest continuous-action case, we minimize a squared error between the predicted action and the demonstrated action.
+
+This is attractive because it uses the same machinery as standard deep learning. We can train with minibatches, use images and proprioception as inputs, scale to large datasets, and evaluate prediction error on held-out demonstrations.
+
+But we should be careful about what the loss means. A low behavioral cloning loss tells us that the policy predicts expert actions well on states that look like the training data. It does not automatically tell us that the policy will recover well from its own mistakes after it is deployed in closed loop.
+
+Also, the squared loss assumes that the average of plausible expert actions is itself a good action. That assumption is often false in manipulation. If there are two valid ways to approach an object, the mean of those two actions may point toward neither valid strategy.
+:::
 
 ---
 
 ## Why Not Only Reinforcement Learning?
 
-- Reward design is difficult for contact-rich tasks.
-- Exploration can be unsafe or slow on hardware.
+::: {.two-column-balanced}
+::: {.compact}
+- Reward design is difficult for contact-rich manipulation.
+- Exploration can be unsafe, slow, or damaging on hardware.
 - Resetting physical systems is expensive.
-- Demonstrations provide useful structure before trial-and-error optimization.
+- Demonstrations provide structure before trial-and-error optimization.
+:::
+
+::: {.warning}
+Reinforcement learning is powerful, but on real robots the data collection loop is constrained by time, safety, wear, and reset logistics.
+:::
+:::
+
+::: {.notes}
+A natural question is: why not solve the whole problem with reinforcement learning? In principle, reinforcement learning is a very general framework. The robot tries actions, receives rewards, and improves its policy.
+
+The difficulty is that real robot learning has a very expensive interaction loop. Each trial takes physical time. Failed exploration can damage the robot, the object, or the environment. Many manipulation tasks require manual resets. And for contact-rich tasks, designing a reward that captures both task success and safe physical interaction is not trivial.
+
+Imitation learning changes the starting point. Instead of beginning with random exploration, we start from demonstrations that already contain useful structure: where to move, when to slow down, how to approach contact, and how to recover from small errors.
+
+This does not mean imitation learning and reinforcement learning are mutually exclusive. A common strategy is to use demonstrations to initialize a policy and then improve it with interaction. For this lecture, imitation learning is important because Diffusion Policy is trained from demonstrations and must later be executed as a real-time robot policy.
+:::
 
 ---
 
 ## Covariate Shift
 
+::: {.two-column-balanced}
+::: {.compact}
 - During training, the policy sees expert states.
 - During deployment, policy errors can push the robot into unseen states.
 - Small mistakes can compound over time.
 
-TODO: Insert covariate shift trajectory illustration at `figures/covariate_shift.png`.
+$$
+o_t \sim d^{\pi_E}
+\quad\text{during training, but}\quad
+o_t \sim d^{\pi_\theta}
+\quad\text{during execution.}
+$$
+:::
+
+::: {}
+![](figures/covariate_shift.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+Covariate shift is the classic failure mode of behavioral cloning. During training, the data distribution is generated by the expert policy. During deployment, the state distribution is generated by the learned policy. These two distributions may be different.
+
+Imagine an expert trajectory that stays centered during insertion. The learned policy makes a small lateral error. After that error, the robot observes a state that may not be well represented in the dataset. The next action is then less reliable, which can create an even larger error. This is how small prediction mistakes compound over time.
+
+This is especially important in contact-rich manipulation because the environment can amplify small pose errors into large forces or contact switches. A policy that looks good on validation data may still fail when it drifts away from the expert manifold.
+
+There are several ways to address this, such as collecting corrective demonstrations, using dataset aggregation, adding noise and recovery examples, or using closed-loop policy architectures. For today, the important point is that imitation learning is not only a supervised learning problem; it is supervised learning embedded inside a closed-loop dynamical system.
+:::
 
 ---
 
 ## Multimodal Actions
 
+::: {.two-column-balanced}
+::: {.compact}
 For the same observation, there may be several valid expert actions:
 
 - grasp from the left or the right
 - push or pull
 - wait, retreat, or continue contact
 
-Mean-squared behavioral cloning can average modes and produce invalid actions.
+Mean-squared behavioral cloning can average modes and produce invalid commands.
+:::
+
+::: {.equation-card}
+If two actions are valid,
+
+$$
+a^{(1)} \neq a^{(2)},
+$$
+
+the mean action
+
+$$
+\bar{a} = \frac{1}{2}(a^{(1)} + a^{(2)})
+$$
+
+may be physically meaningless.
+:::
+:::
+
+::: {.notes}
+Many manipulation tasks are multimodal. From the same observation, the expert may have several valid choices. A robot can grasp an object from the left or from the right. It can push first and then grasp, or grasp directly. During contact, it may continue applying gentle pressure or retreat and re-approach.
+
+This is a problem for deterministic regression with a mean-squared error loss. If the dataset contains multiple valid modes, the model is encouraged to predict an average action. But the average of two valid strategies is not necessarily a valid strategy.
+
+This is one of the key motivations for distributional policies. Instead of predicting only one action, we want the policy to represent a distribution of plausible expert-like actions. The distribution should still be conditioned on the observation and task. Multimodal does not mean arbitrary; it means there may be several structured, valid choices.
+
+This point will connect directly to diffusion models, because diffusion gives us a way to model complex high-dimensional distributions over actions or action trajectories.
+:::
 
 ---
 
 ## Transition to Generative Policies
 
-Generative policies model action distributions instead of a single deterministic action:
+::: {.two-column-balanced}
+::: {.compact}
+- Deterministic policies predict one action.
+- Generative policies model a conditional action distribution.
+- For robotics, we often want distributions over action sequences, not only one-step actions.
 
 $$
-a_t \sim p_\theta(a_t \mid o_t)
+A_{t:t+H}
+\sim
+p_\theta(A_{t:t+H} \mid o_t)
 $$
+:::
 
-This motivates diffusion-based policies for high-dimensional, multimodal robot action generation.
+::: {.takeaway}
+Diffusion Policy uses a generative model to sample coherent action trajectories conditioned on robot observations.
+:::
+:::
+
+
+::: {.notes}
+We are now ready to transition from classical behavioral cloning to generative policies. The key shift is that the policy is no longer just a deterministic function that returns one best action. Instead, it represents a conditional distribution over possible actions.
+
+In robot manipulation, it is often even more useful to generate a short horizon of future actions, $A_{t:t+H}$, rather than one command at a time. A sequence can encode timing, smoothness, and commitment to one mode of behavior. For example, choosing a left-side grasp is not just one action; it is a coherent short trajectory.
+
+Diffusion Policy follows this idea. It uses a diffusion model as the generative mechanism for action trajectories conditioned on observations. This gives the model enough expressiveness to represent multimodal demonstrations and high-dimensional continuous actions.
+
+The warning is that generation alone does not solve control. A sampled trajectory still has to be executed on a real robot with latency, stability, force limits, and safety constraints. That is why the rest of the lecture will move from diffusion models to efficient inference and then to compliant control.
+:::

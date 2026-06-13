@@ -1,12 +1,27 @@
-# Inference Efficiency
+# Inference Efficiency {.section-divider}
 
 ## Why Speed Matters in Robot Control
 
+::: {.two-column-balanced}
+::: {.compact}
 - Control loops have strict timing budgets.
 - Slow inference increases tracking error and reaction delay.
 - Contact-rich tasks may require fast corrections.
+:::
 
-TODO: Insert control loop timing diagram at `figures/control_loop_latency.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Control-loop latency budget</div>
+<div class="placeholder-path">figures/control_loop_latency.png</div>
+:::
+:::
+
+::: {.notes}
+Main point: latency is a control variable, not only a software performance metric.
+
+Intuition: if the robot reacts late to contact, even a good planned action may arrive after the physical situation has changed.
+
+Warning: high average frame rate is not enough; worst-case timing and jitter matter in control loops.
+:::
 
 ---
 
@@ -20,6 +35,14 @@ $$
 
 where $T_{net}$ is the time for one denoising network evaluation.
 
+::: {.notes}
+Main point: the number of denoising steps multiplies the cost of one network pass.
+
+Intuition: if one denoising step takes 5 ms, 20 steps already cost about 100 ms before accounting for sensing and control overhead.
+
+Warning: this equation is a simplification; batching, GPU synchronization, encoders, and communication can dominate in practice.
+:::
+
 ---
 
 ## DDIM and Fewer Sampling Steps
@@ -28,7 +51,18 @@ where $T_{net}$ is the time for one denoising network evaluation.
 - Fewer steps reduce latency.
 - The risk is lower action quality or less stable behavior.
 
-TODO: Insert quality-latency curve at `figures/sampling_steps_latency.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Quality-latency curve</div>
+<div class="placeholder-path">figures/sampling_steps_latency.png</div>
+:::
+
+::: {.notes}
+Main point: fewer sampling steps are attractive, but they change the learned policy's behavior.
+
+Intuition: taking fewer denoising steps is like making larger jumps during refinement; it may be faster but less precise.
+
+Warning: do not evaluate samplers only by visual smoothness or offline loss; test closed-loop behavior on the task.
+:::
 
 ---
 
@@ -37,6 +71,14 @@ TODO: Insert quality-latency curve at `figures/sampling_steps_latency.png`.
 - Larger chunks amortize inference cost over multiple control steps.
 - Smaller execution horizons react faster to new observations.
 - The design choice depends on task dynamics and contact uncertainty.
+
+::: {.notes}
+Main point: chunk size and replanning frequency are a latency-reactivity tradeoff.
+
+Intuition: slow, predictable tasks can tolerate longer chunks; fast contact changes require more frequent replanning.
+
+Warning: executing too much of an old chunk can turn a closed-loop policy into an effectively open-loop controller.
+:::
 
 ---
 
@@ -55,8 +97,23 @@ Placeholder topics:
 
 Potential architecture:
 
+::: {.two-column-balanced}
+::: {.compact}
 - a slow diffusion policy proposes temporally coherent plans
 - a fast local controller tracks, filters, or corrects actions
 - compliance parameters adapt at a higher control rate
+:::
 
-TODO: Insert slow-fast control architecture at `figures/slow_fast_policy.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Slow-fast control architecture</div>
+<div class="placeholder-path">figures/slow_fast_policy.png</div>
+:::
+:::
+
+::: {.notes}
+Main point: separate high-level trajectory generation from faster local correction.
+
+Intuition: the diffusion model can plan at a slower rate while an admittance or impedance layer reacts quickly to forces.
+
+Warning: the interface between slow and fast layers must be designed carefully; otherwise the layers can fight each other.
+:::

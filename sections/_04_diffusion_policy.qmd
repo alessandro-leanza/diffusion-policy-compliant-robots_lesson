@@ -1,26 +1,51 @@
-# Diffusion Policy
+# Diffusion Policy {.section-divider}
 
 ## What Diffusion Policy Generates
 
 Diffusion Policy generates short-horizon action trajectories:
 
+::: {.equation-card}
 $$
 \mathbf{a}_{t:t+H}
 \sim
 p_\theta(\mathbf{a}_{t:t+H} \mid \mathbf{o}_{t-T_o:t})
 $$
+:::
 
 This gives the policy temporal structure beyond a single next action.
+
+::: {.notes}
+Main point: Diffusion Policy models a distribution over action chunks conditioned on recent observations.
+
+Intuition: the chunk captures how actions should unfold over a short horizon, not just the next motor command.
+
+Warning: do not confuse the action horizon $H$ with the diffusion denoising horizon; they are different loops.
+:::
 
 ---
 
 ## Action Trajectories Instead of Single Actions
 
+::: {.two-column-balanced}
+::: {.compact}
 - A trajectory can encode approach, contact, and recovery phases.
 - Temporal action chunks reduce myopic behavior.
 - Multimodal sequence generation can represent several plausible strategies.
+:::
 
-TODO: Insert trajectory chunk visualization at `figures/action_trajectory_chunk.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Action trajectory chunk</div>
+<div class="placeholder-path">figures/action_trajectory_chunk.png</div>
+:::
+:::
+
+::: {.notes}
+Main point: action trajectories let the policy express short-term temporal intent.
+
+Intuition: opening a drawer is not a sequence of independent actions; approach, contact, pull, and recovery are coupled.
+
+Warning: a longer chunk is not always better because stale plans may ignore new contact information.
+:::
 
 ---
 
@@ -28,12 +53,27 @@ TODO: Insert trajectory chunk visualization at `figures/action_trajectory_chunk.
 
 Possible conditioning inputs:
 
+::: {.two-column-balanced}
+::: {.compact}
 - RGB or RGB-D images
 - proprioception
 - force/torque measurements
 - task labels or language instructions
+:::
 
-TODO: Insert observation encoder diagram at `figures/observation_conditioning.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Observation encoder diagram</div>
+<div class="placeholder-path">figures/observation_conditioning.png</div>
+:::
+:::
+
+::: {.notes}
+Main point: conditioning determines what information the denoiser can use to choose a plausible action trajectory.
+
+Intuition: vision may tell the object pose, proprioception tells the robot configuration, and force tells whether contact has occurred.
+
+Warning: adding sensors does not automatically help; timing, calibration, and representation quality matter.
+:::
 
 ---
 
@@ -45,19 +85,40 @@ TODO: Insert observation encoder diagram at `figures/observation_conditioning.pn
 
 This connects diffusion sampling with receding horizon control.
 
+::: {.notes}
+Main point: action chunking is the bridge between slow generative sampling and continuous robot execution.
+
+Intuition: sample a short plan, execute only the beginning, then update with fresh observations.
+
+Warning: students may assume the whole sampled chunk is executed; in receding horizon execution, much of it can be discarded.
+:::
+
 ---
 
 ## Receding Horizon Execution
 
 At robot time $t$:
 
+::: {.process-list}
 1. observe the scene
 2. sample an action trajectory
 3. execute the first actions
 4. discard the remainder
 5. replan
+:::
 
-TODO: Insert receding horizon timeline at `figures/receding_horizon_execution.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Receding horizon timeline</div>
+<div class="placeholder-path">figures/receding_horizon_execution.png</div>
+:::
+
+::: {.notes}
+Main point: emphasize the closed-loop nature of deployment.
+
+Intuition: this is similar to model predictive control: plan ahead, execute a prefix, replan.
+
+Warning: the policy is not purely open-loop just because it outputs a sequence; replanning frequency is essential.
+:::
 
 ---
 
@@ -68,7 +129,18 @@ TODO: Insert receding horizon timeline at `figures/receding_horizon_execution.pn
 - Add noise to expert action chunks.
 - Train the denoising network.
 
-TODO: Insert training pipeline figure at `figures/diffusion_policy_training.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Diffusion Policy training pipeline</div>
+<div class="placeholder-path">figures/diffusion_policy_training.png</div>
+:::
+
+::: {.notes}
+Main point: training denoises expert action chunks conditioned on observations.
+
+Intuition: the model sees a corrupted expert trajectory and learns how to recover the original expert-like chunk.
+
+Warning: training quality depends heavily on demonstration diversity and alignment between observations and actions.
+:::
 
 ---
 
@@ -79,16 +151,38 @@ TODO: Insert training pipeline figure at `figures/diffusion_policy_training.png`
 - Iteratively denoise.
 - Send selected actions to the controller.
 
-TODO: Insert inference pipeline figure at `figures/diffusion_policy_inference.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Diffusion Policy inference pipeline</div>
+<div class="placeholder-path">figures/diffusion_policy_inference.png</div>
+:::
+
+::: {.notes}
+Main point: inference starts from noise and repeatedly denoises toward an executable action chunk.
+
+Intuition: the policy constructs an action sequence through iterative refinement rather than a single forward prediction.
+
+Warning: this iterative process is exactly why latency becomes a design constraint for robot control.
+:::
 
 ---
 
 ## Demonstration Video Placeholder
 
-TODO: Insert demo video at `assets/videos/diffusion_policy_demo.mp4`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Diffusion Policy robot demo video</div>
+<div class="placeholder-path">assets/videos/diffusion_policy_demo.mp4</div>
+:::
 
 ```{=html}
 <!-- Example future syntax:
 <video controls src="assets/videos/diffusion_policy_demo.mp4"></video>
 -->
 ```
+
+::: {.notes}
+Main point: use the demo to connect the abstract pipeline to visible robot behavior.
+
+Intuition: ask students to watch for temporal coherence, recovery after small disturbances, and contact transitions.
+
+Warning: videos can hide failures and reset costs; do not treat a successful clip as complete evidence of robustness.
+:::

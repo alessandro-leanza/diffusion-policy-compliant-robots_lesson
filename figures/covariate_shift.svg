@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Covariate shift in behavioral cloning</title>
+  <desc id="desc">The expert trajectory remains on the demonstrated state distribution while learned policy errors drift into unseen states.</desc>
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b45309"/>
+    </marker>
+    <style>
+      .axis { stroke: #9fb3cc; stroke-width: 3; }
+      .expert { stroke: #2563eb; stroke-width: 8; fill: none; marker-end: url(#arrow-blue); }
+      .policy { stroke: #b45309; stroke-width: 8; fill: none; marker-end: url(#arrow-orange); stroke-dasharray: 15 13; }
+      .cloud { fill: #dbeafe; stroke: #aac4e8; stroke-width: 3; opacity: 0.78; }
+      .badcloud { fill: #fffbeb; stroke: #fde68a; stroke-width: 3; opacity: 0.95; }
+      .label { fill: #12213f; font-family: Arial, sans-serif; font-size: 28px; font-weight: 700; }
+      .small { fill: #637083; font-family: Arial, sans-serif; font-size: 22px; }
+      .blue { fill: #2563eb; }
+      .orange { fill: #b45309; }
+    </style>
+  </defs>
+
+  <line x1="85" y1="430" x2="825" y2="430" class="axis"/>
+  <line x1="85" y1="430" x2="85" y2="70" class="axis"/>
+  <text x="830" y="465" text-anchor="end" class="small">time / rollout</text>
+  <text x="55" y="80" text-anchor="start" class="small" transform="rotate(-90 55 80)">state deviation</text>
+
+  <ellipse cx="395" cy="230" rx="285" ry="90" class="cloud"/>
+  <text x="395" y="145" text-anchor="middle" class="small">states covered by demonstrations</text>
+
+  <ellipse cx="670" cy="345" rx="150" ry="65" class="badcloud"/>
+  <text x="670" y="358" text-anchor="middle" class="small">unseen states</text>
+
+  <path d="M125 310 C235 265, 350 240, 480 220 C585 203, 665 197, 765 180" class="expert"/>
+  <path d="M125 310 C235 265, 340 252, 445 255 C540 260, 590 310, 710 360" class="policy"/>
+
+  <circle cx="125" cy="310" r="10" class="blue"/>
+  <circle cx="445" cy="255" r="10" class="orange"/>
+  <circle cx="710" cy="360" r="10" class="orange"/>
+
+  <text x="250" y="250" class="label blue">expert rollout</text>
+  <text x="530" y="300" class="label orange">policy drift</text>
+  <text x="430" y="485" text-anchor="middle" class="small">training distribution and deployment distribution can differ</text>
+</svg>

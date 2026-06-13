@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Behavioral cloning pipeline</title>
+  <desc id="desc">Expert demonstrations are converted into observation-action pairs used to train a policy by supervised learning.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-muted" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#637083"/>
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #aac4e8; stroke-width: 3; rx: 18; }
+      .soft { fill: #e0f2fe; stroke: #0891b2; stroke-width: 3; rx: 18; }
+      .label { fill: #12213f; font-family: Arial, sans-serif; font-size: 30px; font-weight: 700; }
+      .small { fill: #637083; font-family: Arial, sans-serif; font-size: 21px; }
+      .math { fill: #12213f; font-family: Arial, sans-serif; font-size: 24px; font-style: italic; }
+      .arrow { stroke: #2563eb; stroke-width: 5; fill: none; marker-end: url(#arrow); }
+      .update { stroke: #637083; stroke-width: 4; fill: none; marker-end: url(#arrow-muted); stroke-dasharray: 10 10; }
+      .dot { fill: #2563eb; opacity: 0.85; }
+    </style>
+  </defs>
+
+  <rect x="30" y="45" width="210" height="165" class="box"/>
+  <text x="135" y="105" text-anchor="middle" class="label">Expert</text>
+  <text x="135" y="142" text-anchor="middle" class="small">demonstrates</text>
+  <path d="M82 170 C118 130, 150 208, 190 160" stroke="#0891b2" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <circle cx="82" cy="170" r="8" class="dot"/>
+  <circle cx="190" cy="160" r="8" class="dot"/>
+
+  <path d="M255 128 L340 128" class="arrow"/>
+
+  <rect x="360" y="45" width="210" height="165" class="soft"/>
+  <text x="465" y="100" text-anchor="middle" class="label">Dataset</text>
+  <text x="465" y="137" text-anchor="middle" class="math">(o<tspan baseline-shift="sub" font-size="16">t</tspan>, a<tspan baseline-shift="sub" font-size="16">t</tspan>)</text>
+  <text x="465" y="172" text-anchor="middle" class="small">supervised pairs</text>
+
+  <path d="M585 128 L670 128" class="arrow"/>
+
+  <rect x="690" y="45" width="180" height="165" class="box"/>
+  <text x="780" y="100" text-anchor="middle" class="label">Policy</text>
+  <text x="780" y="138" text-anchor="middle" class="math">π<tspan baseline-shift="sub" font-size="16">θ</tspan>(o<tspan baseline-shift="sub" font-size="16">t</tspan>)</text>
+  <text x="780" y="173" text-anchor="middle" class="small">predict a<tspan baseline-shift="sub" font-size="14">t</tspan></text>
+
+  <rect x="165" y="295" width="570" height="150" class="box"/>
+  <text x="450" y="350" text-anchor="middle" class="label">Behavioral cloning objective</text>
+  <text x="450" y="392" text-anchor="middle" class="math">compare π<tspan baseline-shift="sub" font-size="16">θ</tspan>(o<tspan baseline-shift="sub" font-size="16">t</tspan>) with expert a<tspan baseline-shift="sub" font-size="16">t</tspan></text>
+  <text x="450" y="425" text-anchor="middle" class="small">minimize prediction error</text>
+
+  <path d="M430 220 L360 285" class="arrow"/>
+  <text x="335" y="262" text-anchor="end" class="small">target a<tspan baseline-shift="sub" font-size="14">t</tspan></text>
+
+  <path d="M780 220 L610 285" class="arrow"/>
+  <text x="738" y="262" text-anchor="middle" class="small">prediction π<tspan baseline-shift="sub" font-size="14">θ</tspan>(o<tspan baseline-shift="sub" font-size="14">t</tspan>)</text>
+
+  <path d="M450 295 C485 245, 610 225, 690 175" class="update"/>
+  <text x="590" y="242" text-anchor="middle" class="small">update θ</text>
+</svg>

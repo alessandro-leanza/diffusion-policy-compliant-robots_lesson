@@ -1,4 +1,4 @@
-# Diffusion Policy and Variable Admittance
+# Diffusion Policy and Variable Admittance {.section-divider}
 
 ## Why Combine Them?
 
@@ -6,21 +6,42 @@
 - Variable admittance can shape how the robot physically interacts.
 - The combined problem asks: what should the robot do, and how compliant should it be?
 
+::: {.notes}
+Main point: motivate the combined architecture as coupling decision-making with interaction behavior.
+
+Intuition: for the same insertion task, the robot may need both a trajectory choice and a compliance profile.
+
+Warning: do not imply the diffusion model should replace the controller; it can provide references or parameters that a controller enforces.
+:::
+
 ---
 
 ## Architecture: Desired Trajectories
 
 The diffusion policy outputs desired motion:
 
+::: {.equation-card}
 $$
 \mathbf{x}^{des}_{t:t+H}
 \sim
 p_\theta(\mathbf{x}^{des}_{t:t+H} \mid \mathbf{o}_{t-T_o:t})
 $$
+:::
 
 An admittance controller handles contact response.
 
-TODO: Insert architecture diagram at `figures/dp_outputs_trajectory.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Policy outputs desired trajectory</div>
+<div class="placeholder-path">figures/dp_outputs_trajectory.png</div>
+:::
+
+::: {.notes}
+Main point: this is the conservative architecture: learn desired motion and keep compliance in a separate controller.
+
+Intuition: the diffusion policy says where to go; the admittance controller decides how measured force modifies that motion.
+
+Warning: this is easier to make safe, but may limit how much task-specific compliance the policy can express.
+:::
 
 ---
 
@@ -28,15 +49,28 @@ TODO: Insert architecture diagram at `figures/dp_outputs_trajectory.png`.
 
 The diffusion policy can also output motion and control parameters:
 
+::: {.equation-card}
 $$
 (\mathbf{x}^{des}_{t:t+H}, \mathbf{K}_{t:t+H}, \mathbf{D}_{t:t+H})
 \sim
 p_\theta(\cdot \mid \mathbf{o}_{t-T_o:t})
 $$
+:::
 
 The controller then enforces bounds before execution.
 
-TODO: Insert architecture diagram at `figures/dp_outputs_admittance_parameters.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Policy outputs trajectory and gains</div>
+<div class="placeholder-path">figures/dp_outputs_admittance_parameters.png</div>
+:::
+
+::: {.notes}
+Main point: this architecture lets the policy generate both motion and interaction parameters.
+
+Intuition: the policy can learn that some task phases require high stiffness while others require yielding behavior.
+
+Warning: outputting gains directly is high risk unless bounds, smoothing, and stability checks are enforced.
+:::
 
 ---
 
@@ -44,12 +78,27 @@ TODO: Insert architecture diagram at `figures/dp_outputs_admittance_parameters.p
 
 Potential conditioning signals:
 
+::: {.two-column-balanced}
+::: {.compact}
 - vision for scene context
 - force/torque for interaction state
 - proprioception for robot state
 - EMG for human intent or assistance cues
+:::
 
-TODO: Insert multimodal sensing diagram at `figures/multimodal_robot_sensing.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Multimodal robot sensing</div>
+<div class="placeholder-path">figures/multimodal_robot_sensing.png</div>
+:::
+:::
+
+::: {.notes}
+Main point: multimodal observations are useful because contact and human intent are not fully visible from images alone.
+
+Intuition: vision tells where objects are, force tells what interaction is happening, and EMG may hint at intended human assistance.
+
+Warning: more modalities increase synchronization and calibration complexity; noisy signals can mislead the policy.
+:::
 
 ---
 
@@ -57,13 +106,23 @@ TODO: Insert multimodal sensing diagram at `figures/multimodal_robot_sensing.png
 
 Learned gains should be projected or constrained:
 
+::: {.equation-card}
 $$
 K_{min} \preceq K_d \preceq K_{max},
 \qquad
 D_{min} \preceq D_d \preceq D_{max}
 $$
+:::
 
 This keeps the learned policy inside an admissible control envelope.
+
+::: {.notes}
+Main point: learned compliance parameters should be projected into a safe admissible set.
+
+Intuition: think of the neural network as proposing values and the controller as clipping or projecting them before execution.
+
+Warning: simple clipping may not be enough; rate limits and coupled constraints between stiffness and damping may also matter.
+:::
 
 ---
 
@@ -76,4 +135,15 @@ Possible research questions:
 - What safety filters are needed for learned admittance parameters?
 - How do we evaluate performance beyond task success?
 
-TODO: Add project-specific system diagram at `figures/research_direction_system.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Research direction system diagram</div>
+<div class="placeholder-path">figures/research_direction_system.png</div>
+:::
+
+::: {.notes}
+Main point: close the technical arc by positioning the lecture as a research direction.
+
+Intuition: the open problem is not only better imitation, but learned interaction policies that remain safe and interpretable.
+
+Warning: be explicit about what is speculative versus already demonstrated in the literature or in your own work.
+:::

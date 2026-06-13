@@ -1,44 +1,64 @@
-# Diffusion Policy for Compliant Robots
+## Lecture Roadmap
 
-## From Imitation Learning to Variable Admittance Control
-
-Alessandro Leanza
-
----
-
-# Lecture Roadmap
-
+::: {.roadmap}
 - Motivation: contact-rich manipulation and compliant robots
 - Imitation learning and generative policies
 - Diffusion models and Diffusion Policy
 - Inference efficiency for robot control
 - Compliant control and variable admittance
 - Research directions and discussion
+:::
+
+::: {.notes}
+Main point: frame the lecture as a progression from data-driven policy learning to physically safe robot interaction.
+
+Intuition: tell students that the first half answers "how do we generate robot actions?", while the second half asks "how do those actions behave under contact?".
+
+Warning: avoid presenting Diffusion Policy as a complete control solution; it still needs a real robot controller underneath.
+:::
 
 ---
 
-# Learning Objectives
+## Learning Objectives
 
 By the end of the lecture, students should be able to:
 
+::: {.objective-grid}
 - explain why diffusion-based policies are useful for multimodal robot behavior
 - describe how Diffusion Policy predicts action trajectories
 - connect learned policies with impedance and admittance control concepts
 - reason about latency, safety, and stability constraints in learned robot control
+:::
+
+::: {.notes}
+Main point: set expectations that this is a conceptual and architectural lecture, not a full derivation of every algorithm.
+
+Intuition: students should leave able to read a Diffusion Policy paper and ask control-aware questions about deployment.
+
+Warning: emphasize that "learning objectives" are not implementation promises; detailed code and benchmarks would be separate sessions.
+:::
 
 ---
 
-# Theme Check: Key Takeaway
+## Theme Check: Key Takeaway
 
 ::: {.takeaway}
 Diffusion Policy is useful because it models **temporally coherent, multimodal action trajectories**, while compliant control determines how those trajectories interact with contact forces.
 :::
 
+::: {.notes}
+Main point: introduce the central thesis of the lecture in one sentence.
+
+Intuition: use a simple manipulation example: the policy may choose how to insert a peg, but compliance determines whether a small misalignment causes damage or graceful correction.
+
+Warning: do not let students equate multimodality with randomness; the goal is structured alternatives conditioned on the situation.
+:::
+
 ---
 
-# Theme Check: Large Equation
+## Theme Check: Large Equation
 
-::: {.large-equation}
+::: {.equation-card}
 $$
 \mathbf{a}_{t:t+H}
 \sim
@@ -54,10 +74,22 @@ $$
 The policy samples a future action chunk conditioned on recent observations.
 </div>
 
+::: {.notes}
+Main point: explain that Diffusion Policy predicts a chunk of future actions, not just the immediate next command.
+
+Intuition: compare it to planning a short phrase rather than one word at a time; the temporal pattern matters.
+
+Warning: clarify that $t$ is robot/control time, while diffusion denoising steps use a separate index later in the lecture.
+:::
+
 ---
 
-# Lecture Scope
+## Lecture Scope
 
 - This deck is a scaffold for a 2.5-hour graduate lecture.
 - Mathematical derivations will stay focused on control and learning intuition.
-- TODO: Insert lecture timing diagram in `figures/lecture_timing.png`.
+
+::: {.figure-placeholder}
+<div class="placeholder-title">Lecture timing diagram</div>
+<div class="placeholder-path">figures/lecture_timing.png</div>
+:::

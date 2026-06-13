@@ -1,12 +1,27 @@
-# Compliant Control
+# Compliant Control {.section-divider}
 
 ## Why Position-Only Policies Are Not Enough
 
+::: {.two-column-balanced}
+::: {.compact}
 - Position commands alone do not specify interaction behavior.
 - The same motion can be safe or unsafe depending on stiffness.
 - Contact-rich manipulation needs motion and mechanical response.
+:::
 
-TODO: Insert contact force illustration at `figures/position_only_limitations.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Position command under contact</div>
+<div class="placeholder-path">figures/position_only_limitations.png</div>
+:::
+:::
+
+::: {.notes}
+Main point: position commands alone do not define how the robot behaves when the environment resists.
+
+Intuition: the same target pose can be gentle or dangerous depending on stiffness and force response.
+
+Warning: do not frame this as "position control is bad"; it is insufficient by itself for many contact-rich tasks.
+:::
 
 ---
 
@@ -15,6 +30,14 @@ TODO: Insert contact force illustration at `figures/position_only_limitations.pn
 - Position control: track desired motion.
 - Force control: regulate interaction force.
 - Compliant control: shape the dynamic relation between force and motion.
+
+::: {.notes}
+Main point: distinguish the control objectives before introducing impedance and admittance.
+
+Intuition: position asks "where should I be?", force asks "how hard should I push?", compliance asks "how should motion and force relate?".
+
+Warning: real robot controllers often mix these categories, so treat them as conceptual anchors rather than strict boxes.
+:::
 
 ---
 
@@ -28,6 +51,14 @@ Useful mental model:
 - low stiffness: safer but less accurate
 - damping: dissipates energy and smooths response
 
+::: {.notes}
+Main point: impedance control shapes the apparent mechanical behavior of the robot.
+
+Intuition: use the spring-damper analogy: stiffness is how strongly the robot resists displacement, damping is how it resists velocity.
+
+Warning: high stiffness is not automatically better for precision if contact uncertainty creates large forces.
+:::
+
 ---
 
 ## Admittance Control Intuition
@@ -35,6 +66,14 @@ Useful mental model:
 Admittance control maps measured external force to a motion correction.
 
 This is useful when the low-level robot interface accepts position or velocity commands.
+
+::: {.notes}
+Main point: admittance control converts measured forces into motion commands.
+
+Intuition: if the environment pushes on the robot, the admittance law decides how much the reference should move in response.
+
+Warning: students often invert impedance and admittance; impedance maps motion to force, admittance maps force to motion.
+:::
 
 ---
 
@@ -47,6 +86,14 @@ M_d \ddot{x}_r + D_d \dot{x}_r + K_d x_r = F_{ext}
 $$
 
 where $M_d$, $D_d$, and $K_d$ are desired mass, damping, and stiffness.
+
+::: {.notes}
+Main point: present the admittance equation as a desired dynamic relation, not a literal physical mass-spring-damper attached to the robot.
+
+Intuition: the controller simulates how a virtual mass, damper, and spring would move under the measured external force.
+
+Warning: choosing gains poorly can produce unstable or sluggish interaction, especially with delays and noisy force sensing.
+:::
 
 ---
 
@@ -62,6 +109,14 @@ $$
 
 This creates task-dependent compliance.
 
+::: {.notes}
+Main point: variable gains allow the robot to be stiff or compliant depending on task phase and observations.
+
+Intuition: during insertion, the robot may approach stiffly in free space and become more compliant near contact.
+
+Warning: changing gains online is powerful but risky; abrupt or unconstrained gain changes can destabilize behavior.
+:::
+
 ---
 
 ## Stability and Safety Intuition
@@ -70,4 +125,15 @@ This creates task-dependent compliance.
 - Fast changes in stiffness or damping can destabilize interaction.
 - Passivity and energy-based reasoning provide useful guardrails.
 
-TODO: Insert safety envelope figure at `figures/compliance_safety_bounds.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Compliance safety envelope</div>
+<div class="placeholder-path">figures/compliance_safety_bounds.png</div>
+:::
+
+::: {.notes}
+Main point: learned control parameters must be constrained by safety and stability reasoning.
+
+Intuition: a neural network can propose gains, but a safety filter should enforce allowed ranges and rate limits.
+
+Warning: empirical success is not the same as stability; contact tasks need conservative deployment assumptions.
+:::

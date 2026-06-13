@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-label="Contact-rich manipulation challenge schematic">
+  <rect width="1200" height="720" rx="24" fill="#f8fbff"/>
+
+  <rect x="58" y="58" width="510" height="500" rx="20" fill="#ffffff" stroke="#d8e2f0" stroke-width="4"/>
+  <rect x="632" y="58" width="510" height="500" rx="20" fill="#ffffff" stroke="#d8e2f0" stroke-width="4"/>
+
+  <text x="313" y="126" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#12213f">Small pose error</text>
+  <text x="887" y="126" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#12213f">Compliant recovery</text>
+
+  <line x1="128" y1="275" x2="388" y2="275" stroke="#2563eb" stroke-width="15" stroke-linecap="round"/>
+  <polygon points="394,275 354,249 354,301" fill="#2563eb"/>
+  <line x1="446" y1="177" x2="446" y2="417" stroke="#64748b" stroke-width="16" stroke-linecap="round"/>
+  <rect x="423" y="196" width="46" height="202" rx="13" fill="#e2e8f0"/>
+  <circle cx="390" cy="275" r="42" fill="#dbeafe" stroke="#2563eb" stroke-width="8"/>
+  <line x1="390" y1="275" x2="439" y2="233" stroke="#b45309" stroke-width="9" stroke-linecap="round"/>
+
+  <text x="314" y="212" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#b45309">force spike</text>
+  <text x="313" y="470" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="#637083">A millimeter-scale error</text>
+  <text x="313" y="512" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="#637083">becomes a large contact force.</text>
+
+  <line x1="705" y1="275" x2="960" y2="275" stroke="#0891b2" stroke-width="15" stroke-linecap="round"/>
+  <polygon points="966,275 926,249 926,301" fill="#0891b2"/>
+  <line x1="1018" y1="177" x2="1018" y2="417" stroke="#64748b" stroke-width="16" stroke-linecap="round"/>
+  <rect x="995" y="196" width="46" height="202" rx="13" fill="#e2e8f0"/>
+  <circle cx="930" cy="275" r="42" fill="#e0f2fe" stroke="#0891b2" stroke-width="8"/>
+  <path d="M930 275 C884 219, 812 219, 766 275 C812 331, 884 331, 930 275" fill="none" stroke="#2563eb" stroke-width="9" stroke-linecap="round"/>
+
+  <text x="887" y="212" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#0891b2">yield and recover</text>
+  <text x="887" y="470" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="#637083">Compliance turns contact</text>
+  <text x="887" y="512" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="#637083">into corrective motion.</text>
+
+  <line x1="568" y1="315" x2="632" y2="315" stroke="#2563eb" stroke-width="7" stroke-dasharray="14 14"/>
+  <polygon points="632,315 602,295 602,335" fill="#2563eb"/>
+
+  <rect x="228" y="596" width="744" height="62" rx="16" fill="#dbeafe" stroke="#aac4e8" stroke-width="3"/>
+  <text x="600" y="637" text-anchor="middle" font-family="Arial, sans-serif" font-size="31" font-weight="700" fill="#12213f">Contact changes the control problem.</text>
+</svg>

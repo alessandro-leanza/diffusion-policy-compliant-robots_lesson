@@ -1,4 +1,4 @@
-# Summary
+# Summary {.section-divider}
 
 ## Final Takeaways
 
@@ -7,6 +7,14 @@
 - Real-time deployment requires attention to inference latency.
 - Contact-rich robotics also needs compliant control, not just motion prediction.
 - Variable admittance is a natural bridge between learned behavior and physical interaction.
+
+::: {.notes}
+Main point: summarize the lecture as a chain from demonstrations to generative policies to compliant physical execution.
+
+Intuition: the policy proposes temporally coherent behavior, while compliance determines how that behavior survives contact uncertainty.
+
+Warning: avoid leaving students with the impression that one model solves everything; deployment is a system-level problem.
+:::
 
 ---
 
@@ -17,6 +25,14 @@
 - How should policies combine vision, force, proprioception, and EMG?
 - What benchmarks best measure contact-rich manipulation quality?
 
+::: {.notes}
+Main point: open questions should invite students to think beyond benchmark success rates.
+
+Intuition: a policy that succeeds 90 percent of the time may still be unacceptable if failures involve unsafe contact.
+
+Warning: "safe learning" claims need careful definitions of safety, uncertainty, and deployment conditions.
+:::
+
 ---
 
 ## Discussion Questions
@@ -26,8 +42,18 @@
 - Should a policy output low-level control parameters directly?
 - How should we trade off task success, safety, and interpretability?
 
+::: {.notes}
+Main point: use these questions to start discussion rather than to test recall.
+
+Intuition: ask students to argue for conservative architectures first, then identify what performance they might lose.
+
+Warning: keep the discussion grounded in robot constraints, not only machine-learning model capacity.
+:::
+
 ---
 
 ## References
 
-TODO: Add citations throughout the deck and complete `references.bib`.
+::: {.takeaway}
+Add citations throughout the deck and complete `references.bib`.
+:::

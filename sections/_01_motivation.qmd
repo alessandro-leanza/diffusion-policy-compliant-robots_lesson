@@ -1,27 +1,57 @@
-# Motivation
+# Motivation {.section-divider}
 
 ## Why Compliant Robots Matter
 
+::: {.two-column-balanced}
+::: {.compact}
 - Physical robots often operate near people, tools, fixtures, and uncertain environments.
 - Contact is not a failure mode; it is part of the task.
 - Compliance helps robots absorb uncertainty while maintaining purposeful behavior.
+:::
 
-TODO: Insert image of a compliant robot manipulating an object at `assets/images/compliant_robot_contact.png`.
+::: {}
+![](assets/images/compliant_robot_example_motivation.jpg){width=100%}
+:::
+:::
+
+::: {.notes}
+We start from a very practical observation: useful robots rarely operate in perfectly empty, perfectly known environments. They move near people, tools, fixtures, objects with uncertain pose, and surfaces that may resist or deform. In those settings, contact is not something exceptional that happens only when the robot fails. Contact is often the task itself.
+
+Think about wiping a table, inserting a component, opening a drawer, or handing an object to a person. In all of these examples, the robot has to tolerate small errors in geometry and timing. If the controller reacts to every contact as a hard collision, the behavior becomes brittle. If the robot can shape its mechanical response, then contact can become informative and useful.
+
+So when I say "compliance", I do not mean that the robot is simply weak, slow, or imprecise. I mean that the robot has a task-dependent way of responding to forces. Sometimes we want high stiffness and accurate tracking; sometimes we want the robot to yield, absorb uncertainty, and recover. This distinction is important because the rest of the lecture is about learned policies that still have to interact with the physical world.
+:::
 
 ---
 
 ## Contact-Rich Manipulation Is Difficult
 
+::: {.two-column-balanced}
+::: {.compact}
 - Small pose errors can create large force errors.
 - Friction, deformation, and contact switches are hard to model.
 - Purely geometric plans often fail when the environment pushes back.
+:::
 
-TODO: Insert contact-rich manipulation failure/success figure at `figures/contact_rich_challenges.png`.
+<div class="motivation-schematic">
+<img src="figures/contact_rich_challenges.svg" alt="Schematic showing how a small pose error can cause a force spike, while compliant behavior enables recovery.">
+</div>
+:::
+
+::: {.notes}
+The reason contact-rich manipulation is difficult is that small geometric errors can have large physical consequences. In free space, a one millimeter pose error may be almost irrelevant. During insertion, wiping, pushing, or assembly, that same error can suddenly create a large force because the environment pushes back.
+
+This is also why purely geometric planning is not enough. A geometric plan may say that a trajectory is valid, but the real task depends on friction, deformation, contact switches, and the dynamics of the controller. These effects are hard to model accurately, and they can change during the task.
+
+The point is not that modeling is useless. Models are extremely valuable. The point is that accurate contact models are expensive, brittle, and often incomplete. For this reason, learning from data becomes attractive: demonstrations can contain examples of how an expert handles these contact transitions, even when we cannot write down a perfect analytic model.
+:::
 
 ---
 
 ## Why Learning from Demonstrations Helps
 
+::: {.two-column-balanced}
+::: {.compact}
 - Demonstrations encode task timing, recovery behavior, and implicit contact strategies.
 - Expert data can be easier to collect than dense reward functions.
 - Learning can capture behaviors that are difficult to specify analytically.
@@ -29,11 +59,41 @@ TODO: Insert contact-rich manipulation failure/success figure at `figures/contac
 $$
 \mathcal{D} = \{(o_t, a_t)\}_{t=1}^{N}
 $$
+:::
+
+::: {}
+![](assets/images/takingdemostration.gif){width=100%}
+:::
+:::
+
+::: {.notes}
+This motivates imitation learning. Instead of specifying every detail of the behavior analytically, we ask an expert to demonstrate the task. The demonstration gives us pairs of observations and actions: what the robot or human expert saw, and what action was taken at that time.
+
+The important part is that demonstrations contain more than the final geometric path. They contain timing. They show when to slow down, when to continue through light contact, when to retreat, and when to recover after a small mistake. In contact-rich tasks, these details are often exactly what is hard to encode by hand.
+
+Of course, demonstrations are not magic. They are biased samples of behavior. They do not automatically cover every state the robot may encounter during deployment. But they give us a practical starting point: a dataset that captures expert-like strategies without requiring us to design a dense reward function or an exact contact model from scratch.
+:::
 
 ---
 
 ## From Demonstrations to Control
 
+::: {.two-column-balanced}
+::: {.compact}
 - The learning problem: infer a policy from demonstrations.
 - The control problem: execute that policy safely on a physical robot.
 - The central tension: expressive learned behavior must respect real-time and safety constraints.
+:::
+
+<div class="motivation-schematic">
+<img src="figures/demonstrations_to_control.svg" alt="Pipeline from expert demonstrations to learned policy to controller interface to robot task.">
+</div>
+:::
+
+::: {.notes}
+This slide is the bridge to the rest of the lecture. From a machine learning perspective, the problem is to infer a policy from demonstrations. We want a model that maps observations to actions, or more generally to action trajectories.
+
+From a robotics perspective, that is only half of the story. A learned action is not automatically safe or physically meaningful. It has to pass through a controller, through timing constraints, through force limits, and through the real dynamics of the robot and environment.
+
+So the central tension is this: we want expressive learned behavior, because tasks are complex and often multimodal; but we also need real-time execution, stability, and safe interaction. Diffusion Policy will help us think about expressive action generation. Compliant control will help us think about how those generated actions behave when the robot actually touches the world.
+:::

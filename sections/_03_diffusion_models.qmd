@@ -1,12 +1,27 @@
-# Diffusion Models
+# Diffusion Models {.section-divider}
 
 ## Core Intuition
 
+::: {.two-column-balanced}
+::: {.compact}
 - Start from structured data.
 - Gradually add noise until the data is nearly random.
 - Learn to reverse this process by denoising.
+:::
 
-TODO: Insert diffusion noising/denoising diagram at `figures/diffusion_process.png`.
+::: {.figure-placeholder}
+<div class="placeholder-title">Noising and denoising process</div>
+<div class="placeholder-path">figures/diffusion_process.png</div>
+:::
+:::
+
+::: {.notes}
+Main point: introduce diffusion models through the noising-and-denoising story before showing equations.
+
+Intuition: the model learns many small cleanup steps, like gradually sharpening a corrupted signal.
+
+Warning: the noise process is a training construction; the robot is not physically adding noise to its actions during deployment.
+:::
 
 ---
 
@@ -20,6 +35,14 @@ Diffusion models are widely known for image generation, but the same idea can ge
 - control parameters
 
 The sample space changes; the denoising principle remains.
+
+::: {.notes}
+Main point: make clear that diffusion is a general generative modeling recipe, not only an image model.
+
+Intuition: actions can be treated as structured vectors or sequences, just as images are structured arrays.
+
+Warning: action generation has stricter timing and safety requirements than offline image generation.
+:::
 
 ---
 
@@ -40,6 +63,14 @@ $$
 
 where $k$ indexes diffusion time, not robot time.
 
+::: {.notes}
+Main point: explain the forward noising equation and the meaning of the diffusion index.
+
+Intuition: each step slightly shrinks the clean signal and adds Gaussian noise until structure disappears.
+
+Warning: emphasize that $k$ is diffusion time, not the robot time $t$ used for control trajectories.
+:::
+
 ---
 
 ## Reverse Denoising Process
@@ -51,6 +82,14 @@ p_\theta(x_{k-1} \mid x_k, c)
 $$
 
 where $c$ is optional conditioning information such as images, proprioception, or task context.
+
+::: {.notes}
+Main point: the reverse process is the learned generative direction, conditioned on the task context.
+
+Intuition: conditioning tells the denoiser what kind of sample should emerge from noise.
+
+Warning: do not describe the model as exactly inverting the forward process; it learns an approximate reverse distribution from data.
+:::
 
 ---
 
@@ -69,6 +108,14 @@ $$
 \right]
 $$
 
+::: {.notes}
+Main point: the training target is often the noise that was added, not the clean sample directly.
+
+Intuition: predicting noise gives the model a consistent denoising task across many corruption levels.
+
+Warning: this is one common parameterization; papers may also predict clean samples or velocity-like variables.
+:::
+
 ---
 
 ## Sampling Bottleneck
@@ -79,10 +126,30 @@ $$
 
 This tradeoff becomes central when diffusion models are used as policies.
 
+::: {.notes}
+Main point: connect diffusion sampling cost to real-time robot control constraints.
+
+Intuition: an image generator can spend seconds sampling; a controller may have only milliseconds before the next command is due.
+
+Warning: fewer steps are not automatically better if action quality or stability degrades.
+:::
+
 ---
 
 ## DDPM vs DDIM
 
 - DDPM: stochastic denoising sampler.
 - DDIM: deterministic or partially deterministic sampler with fewer steps.
-- TODO: Add comparison table at `figures/ddpm_ddim_comparison.png`.
+
+::: {.figure-placeholder}
+<div class="placeholder-title">DDPM vs DDIM comparison table</div>
+<div class="placeholder-path">figures/ddpm_ddim_comparison.png</div>
+:::
+
+::: {.notes}
+Main point: introduce DDIM as one route toward faster diffusion-policy inference.
+
+Intuition: DDPM is closer to a slow random walk through denoising; DDIM can take more direct deterministic steps.
+
+Warning: avoid overclaiming that DDIM always preserves performance; the speed-quality tradeoff is empirical.
+:::
