@@ -6,6 +6,10 @@ slides.pptx
 .~lock.*#
 *.log
 __pycache__/
+.ipynb_checkpoints/
+practice/data/
+practice/pusht_results/
+practice/*_results/
 .DS_Store
 AGENTS.md
 lecture_timing.md
