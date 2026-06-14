@@ -10,6 +10,12 @@ __pycache__/
 practice/data/
 practice/pusht_results/
 practice/*_results/
+# Instructor-only teaching notes (kept local, not for students)
+practice/practice_notes.tex
+practice/practice_notes.pdf
+practice/*.aux
+practice/*.toc
+practice/*.out
 .DS_Store
 AGENTS.md
 lecture_timing.md
