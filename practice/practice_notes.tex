@@ -1,0 +1,937 @@
+\documentclass[11pt]{article}
+
+% ---------------------------------------------------------------------------
+% Spoken teaching notes for a ~2-hour hands-on practice session on
+% Diffusion Models and Diffusion Policy (5 Jupyter notebooks).
+% Author: Alessandro Leanza (SUPSI)
+% Compiles with a plain: pdflatex practice_notes.tex
+% ---------------------------------------------------------------------------
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  urlcolor=blue!55!black,
+  citecolor=blue!55!black,
+  pdftitle={Hands-on Practice: Diffusion Models and Diffusion Policy},
+  pdfauthor={Alessandro Leanza}
+}
+
+% --- Colours ---------------------------------------------------------------
+\definecolor{saybg}{RGB}{232,242,253}
+\definecolor{sayrule}{RGB}{33,118,209}
+\definecolor{codebg}{RGB}{247,247,247}
+\definecolor{codekw}{RGB}{0,90,160}
+\definecolor{codecomment}{RGB}{110,140,110}
+\definecolor{codestr}{RGB}{170,70,40}
+\definecolor{hlcolor}{RGB}{150,30,30}
+
+% --- "Say this" environment (robust: built on quote + colour) --------------
+% A coloured, left-ruled paragraph block. No mdframed / tcolorbox needed.
+\newenvironment{saythis}{%
+  \par\smallskip\noindent
+  \begin{list}{}{%
+    \setlength{\leftmargin}{1.2em}%
+    \setlength{\rightmargin}{0.5em}%
+    \setlength{\topsep}{2pt}%
+  }\item\relax
+  \color{sayrule}\textbf{Say this.}\hspace{0.4em}\color{black}\itshape
+}{%
+  \end{list}\par\smallskip
+}
+
+% --- Highlight / ask environment -------------------------------------------
+\newcommand{\highlight}[1]{\par\smallskip\noindent\textcolor{hlcolor}{\textbf{Highlight / ask.}}\hspace{0.4em}#1\par\smallskip}
+
+% --- "What it does" tag ----------------------------------------------------
+\newcommand{\whatdoes}[1]{\par\noindent\textbf{What it does.}\hspace{0.4em}#1\par}
+
+% --- Listings configuration for Python -------------------------------------
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{codestr},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  framerule=0.3pt,
+  rulecolor=\color{gray!40},
+  xleftmargin=0.5em,
+  xrightmargin=0.5em,
+  columns=fullflexible,
+  keepspaces=true,
+  aboveskip=6pt,
+  belowskip=6pt
+}
+
+\setlist[itemize]{leftmargin=1.4em,topsep=2pt,itemsep=1pt}
+\setlength{\parskip}{3pt}
+\setlength{\parindent}{0pt}
+
+\title{\textbf{Hands-on Practice: Diffusion Models and Diffusion Policy}\\[0.3em]
+\large Spoken Teaching Notes for a 2-Hour Session (5 Notebooks)}
+\author{Alessandro Leanza \\ \small SUPSI}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+These are the instructor's spoken notes for a two-hour hands-on practice session that
+accompanies the lecture on Diffusion Models and Diffusion Policy for compliant robots.
+The session works through five Jupyter notebooks, run on Google Colab with a GPU.
+The unifying theme is that the \emph{same} diffusion process operates on images, video, and
+robot trajectories --- only the neural-network backbone changes (a 2D U-Net for images, a 1D
+U-Net or Transformer for sequences). Notebook~01 builds data intuition; notebook~02 visualises
+the forward and reverse processes; notebook~03 trains a full DDPM on MNIST from scratch;
+notebook~04 benchmarks four backbones; notebook~05 trains a real Diffusion Policy on the Push-T
+dataset and shows why fast sampling (DDIM) matters for real-time control. For every code block
+below the notes give three things: \textbf{What it does}, a ready-to-read \textbf{Say this} script,
+and \textbf{Highlight / ask} points (with a question to pose to students). The two long training
+runs (notebooks~03 and~05) are launched early and used as cover for the theory, so the wall-clock
+fits into 120 minutes.
+\end{abstract}
+
+\tableofcontents
+\bigskip
+
+% ===========================================================================
+\section{Session Plan (2 hours)}
+% ===========================================================================
+
+The single most important wall-clock fact: \textbf{notebooks 01, 02 and 04 run in seconds}
+(synthetic data and forward passes only), while \textbf{notebook 03 trains for $\approx$15--30~min}
+(DDPM on MNIST, \texttt{NUM\_EPOCHS = 20}) and \textbf{notebook 05 trains for $\approx$30--40~min}
+(Diffusion Policy on Push-T, \texttt{NUM\_EPOCHS = 100}, a checkpoint saved every 10 epochs) on a
+Colab T4. The strategy is to \emph{overlap} those two trainings with explanation.
+
+\paragraph{Recommended ordering.} Run notebooks 01 and 02 quickly (they are pure visualisation).
+Then open notebook 03, walk through its setup and model, and \textbf{start its training cell}.
+While the MNIST DDPM trains, cover all of notebook 04 (architectures --- fast forward passes) and
+the DDPM theory. By the time you finish 04, notebook 03 is done, so you show its samples. Then
+open notebook 05, run setup and the dataset download, build the model, and \textbf{start its
+training cell}; lecture through the Diffusion Policy theory and the lecture bridge while it trains,
+then return to show the sampled action chunks and the DDPM-vs-DDIM speed comparison.
+
+\begin{center}
+\begin{longtable}{@{}p{2.0cm} p{4.6cm} p{2.0cm} p{6.0cm}@{}}
+\toprule
+\textbf{Time} & \textbf{Activity} & \textbf{Wall clock} & \textbf{Notes} \\
+\midrule
+\endhead
+0--10 min   & NB 01 --- Data modalities          & runs in seconds & Images, video, trajectories; normalization. \\
+10--22 min  & NB 02 --- Forward / reverse        & runs in seconds & Schedules, SNR, oracle DDPM \& DDIM reverse. \\
+22--30 min  & NB 03 --- Setup + model walk-through & seconds        & Cover dataset, schedule, U-Net; \textbf{then launch training}. \\
+30--32 min  & \textbf{Start NB 03 training}      & 15--30 min (bg) & Click run on the training cell, let it run. \\
+32--55 min  & NB 04 --- Architectures (all)      & runs in seconds & 2D U-Net, +attn, 1D U-Net, DiT; benchmark. Talk over training. \\
+55--62 min  & Back to NB 03 --- results          & seconds         & Loss curve, samples, denoising trajectory. \\
+62--75 min  & NB 05 --- Setup, download, data    & $\sim$1 min dl  & Zarr load, feature engineering, dataset windows, model. \\
+75--77 min  & \textbf{Start NB 05 training}      & 30--40 min (bg) & Launch training cell. \\
+77--108 min & Diffusion Policy theory + lecture bridge & ---       & Conditioning, action chunking, DDPM$\to$DDIM, real-time control. \\
+108--118 min& Back to NB 05 --- results          & seconds         & Sampled action chunks, DDPM vs DDIM speed, distributions. \\
+118--120 min& Wrap-up / Q\&A                     & ---             & Key takeaways and the bridge to the lecture. \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\highlight{If the GPU is slow or time is short, both trainings can be cut: notebook 03 still
+produces recognizable digits after $\approx$10 epochs, and notebook 05 saves a usable checkpoint
+every 10 epochs. The notebook 05 final cell can also \emph{load a checkpoint} to skip training
+entirely. Always start the two long cells \emph{before} you start lecturing.}
+
+\paragraph{A note on the Setup cells.} CODE \#1 in every notebook is an added ``Setup'' cell:
+it imports \texttt{torch} and prints the PyTorch version and whether CUDA is available. In notebook
+05 it also \texttt{pip install}s \texttt{zarr} and \texttt{gdown} if missing. Run it first in each
+notebook and confirm the line says \texttt{CUDA available: True}; if it says \texttt{False}, fix the
+runtime (\texttt{Runtime $\to$ Change runtime type $\to$ GPU}) before going further. I will not
+re-explain this cell for every notebook.
+
+% ===========================================================================
+\section{Notebook 01 --- Data Modalities}
+% ===========================================================================
+
+\textbf{Learning goal.} Build the intuition that a diffusion model just sees \emph{tensors}: it does
+not care whether a sample is an image, a video clip, or a robot trajectory. We look at the PyTorch
+shapes of each modality, count their dimensionality $d$, and see why every modality must be
+normalized to roughly $\mathcal{N}(\mathbf{0}, \mathbf{I})$. This is the conceptual foundation for
+the whole session.
+
+\subsection{Setup (CODE \#1) and library imports (CODE \#2)}
+\whatdoes{CODE \#1 checks PyTorch / CUDA. CODE \#2 imports NumPy, Matplotlib, PyTorch and PIL,
+sets a seaborn style, and fixes the random seeds (\texttt{np.random.seed(42)},
+\texttt{torch.manual\_seed(42)}) for reproducibility.}
+\begin{saythis}
+Before we touch any maths, let's just load our tools. We fix the random seed so that everything you
+see on my screen you can reproduce exactly on yours. From now on, every number in this notebook is
+deterministic.
+\end{saythis}
+\highlight{Seeds make the demos reproducible. Ask: \emph{why might we want a fixed seed in a teaching
+demo but a random seed in real research?}}
+
+\subsection{Synthetic RGB image and channel decomposition (CODE \#3)}
+\whatdoes{Builds a $64\times64\times3$ synthetic image (a red/green gradient, constant blue, a yellow
+circle, a white corner square) and plots the RGB image plus its three separate channels. The array is
+in \texttt{(H, W, C)} ``channel-last'' NumPy layout with values in $[0,1]$.}
+\begin{saythis}
+An image is nothing more than a grid of numbers. Here I have made a synthetic one so we don't depend
+on any file. Notice the layout: height, then width, then the three colour channels. Each channel is
+itself just a 2D array of intensities --- red, green, blue --- and stacking them gives the colour
+image you see on the left.
+\end{saythis}
+\highlight{Stress the NumPy/PIL convention \texttt{(H, W, C)} versus the PyTorch convention
+\texttt{(C, H, W)} --- this trips up everyone at some point. Ask: \emph{how many numbers does a single
+$64\times64$ RGB image contain?} (Answer: $3\times64\times64 = 12{,}288$.)}
+
+\subsection{Tensor format and batching (CODE \#4)}
+\whatdoes{Permutes the image to PyTorch \texttt{(C, H, W)}, prints the total element count
+$d = C\!\times\!H\!\times\!W$, then builds a batch of 4 by repeating the image with small brightness
+offsets to get \texttt{(B, C, H, W)}. Finally it normalizes the batch from $[0,1]$ to $[-1,1]$.}
+\begin{saythis}
+Neural networks in PyTorch want channels first, so we permute to ``C, H, W''. And they never see one
+image at a time --- they see a \emph{batch}. So the real shape the model works with is
+``B, C, H, W''. The last line is the one I want you to remember: we rescale pixels from zero-to-one to
+minus-one-to-one. That centring around zero is exactly what the diffusion noise schedule expects.
+\end{saythis}
+\highlight{The $[-1,1]$ normalization is not cosmetic: the forward process ends at
+$\mathcal{N}(\mathbf{0},\mathbf{I})$, so zero-mean data makes the signal-to-noise schedule clean. We
+will see this again in every notebook.}
+
+\subsection{Synthetic video (CODE \#5)}
+\whatdoes{Generates an 8-frame $32\times32$ video of an orange ball moving left to right on a colour-shifting
+background, shape \texttt{(T, H, W, C)}; permutes to \texttt{(T, C, H, W)}, adds a batch dimension to get
+\texttt{(B, T, C, H, W)}, and shows all 8 frames.}
+\begin{saythis}
+A video is just a stack of images along a new axis: time. So we add a $T$ dimension at the front and
+get ``T, C, H, W'' for one clip, or ``B, T, C, H, W'' for a batch. Conceptually nothing has changed ---
+it is still a tensor of numbers --- but look at how the total dimensionality explodes once you add
+time. This is exactly why video models like Sora work in a compressed latent space rather than on raw
+pixels.
+\end{saythis}
+\highlight{Dimensionality grows multiplicatively with $T$. This motivates latent diffusion (LDM).
+Ask: \emph{if one frame is $12{,}288$ numbers, how big is a 2-second clip at 30 fps?}}
+
+\subsection{Robot trajectory datasets (CODE \#6)}
+\whatdoes{Defines a figure-eight 2D end-effector trajectory and a 6-DOF joint trajectory, both of length
+$T=100$; builds a dataset of 20 noisy figure-eight ``demonstrations'' to mimic an imitation-learning
+dataset. Shapes are \texttt{(T, D)} per trajectory and \texttt{(B, T, D)} for the batch.}
+\begin{saythis}
+Now the punchline of this notebook. A robot trajectory is \emph{also} just a tensor. Here each
+demonstration is a sequence of two-dimensional end-effector positions --- a figure-eight ---
+with a little noise, like 20 slightly different human demonstrations. The shape is ``T by D'':
+sequence length by action dimension. This ``B, T, D'' tensor is precisely what Diffusion Policy will
+generate in notebook five.
+\end{saythis}
+\highlight{This is the conceptual hinge of the day: trajectories live in the same tensor world as
+images. The action dimension $D$ is small (2, 3, 6, 7), but the temporal structure is what matters.}
+
+\subsection{Trajectory and dimensionality plots (CODE \#7)}
+\whatdoes{Plots the 2D trajectory dataset, the 6 joint-angle curves over time, and a bar chart comparing
+the total dimensionality $d$ across an MNIST image (784), an RGB image (12{,}288), a video clip (24{,}576),
+a joint trajectory (600) and a 2D trajectory (200).}
+\begin{saythis}
+Two things to read off these plots. First, the demonstrations form a \emph{distribution} of
+trajectories, not a single path --- and learning that distribution is exactly what a generative model
+does. Second, look at the bar chart: a robot trajectory is tiny compared with a video. That is good
+news --- diffusion on trajectories is cheap enough to run on a robot in real time, which is the whole
+point of Diffusion Policy.
+\end{saythis}
+\highlight{Trajectories are low-dimensional, which is why real-time diffusion control is feasible.
+Contrast this with video. Ask: \emph{which of these modalities would benefit most from a latent space?}}
+
+\subsection{Normalization examples (CODE \#8)}
+\whatdoes{Normalizes the image from $[0,1]$ to $[-1,1]$ and standardizes the trajectory batch per
+dimension, $(x-\mu)/\sigma$. Prints before/after statistics and plots pixel and trajectory value
+histograms, raw versus normalized.}
+\begin{saythis}
+Different modalities need different normalization recipes, but they all share one goal: get the data
+roughly zero-mean and unit-variance. For images we use a fixed linear map to minus-one-to-one. For
+trajectories we standardize each dimension using the dataset's own mean and standard deviation. Watch
+the histograms shift to be centred on zero --- that is the distribution the diffusion prior assumes.
+\end{saythis}
+\highlight{Per-dimension standardization for trajectories is exactly what notebook 05 does to
+observations and actions, and the inverse map is applied at sampling time. If you forget to
+de-normalize the generated actions, the robot moves nonsensically.}
+
+% ===========================================================================
+\section{Notebook 02 --- Forward and Reverse Diffusion}
+% ===========================================================================
+
+\textbf{Learning goal.} Make the two halves of DDPM concrete and visual: the \emph{forward} process
+$q$ that destroys an image into noise, and the \emph{reverse} process $p_\theta$ that rebuilds it.
+We compare linear and cosine noise schedules, read off the signal-to-noise ratio, and run an
+\emph{oracle} reverse process (using the true stored noise) for both DDPM and DDIM to see what a
+perfect denoiser would achieve.
+
+\subsection{Setup, imports, configuration (CODE \#1--3)}
+\whatdoes{CODE \#1 checks CUDA. CODE \#2 imports and seeds. CODE \#3 is the configuration cell:
+\texttt{IMAGE\_PATH = None} (use synthetic), \texttt{IMAGE\_SIZE = 64}, \texttt{T\_STEPS = 1000} total
+diffusion steps, and the device.}
+\begin{saythis}
+The configuration cell is where you would plug in your own photo if you wanted to. We will use the
+synthetic image and the standard one-thousand-step schedule from the original DDPM paper.
+\end{saythis}
+\highlight{$T = 1000$ is the canonical DDPM choice. We will see notebook 05 use only $T = 100$ ---
+small action chunks need far fewer steps.}
+
+\subsection{Image utilities and the clean image (CODE \#4)}
+\whatdoes{Defines helpers to make the synthetic image, load an optional file, and convert a $[-1,1]$
+tensor back to a displayable $[0,1]$ image. Loads $\mathbf{x}_0$ as a \texttt{(1, C, H, W)} tensor in
+$[-1,1]$ and displays it.}
+\begin{saythis}
+This is our clean starting point, $\mathbf{x}_0$. Everything from here is about corrupting this image
+and then trying to recover it. Note it is already normalized to minus-one-to-one, as we discussed.
+\end{saythis}
+
+\subsection{Noise schedules: linear vs cosine (CODE \#5)}
+\whatdoes{Implements the linear schedule ($\beta_t$ from $10^{-4}$ to $0.02$) and the cosine schedule
+(Nichol \& Dhariwal). Computes $\alpha_t = 1-\beta_t$, the cumulative product
+$\bar{\alpha}_t = \prod_{s\le t}\alpha_s$, and the mixing coefficients $\sqrt{\bar\alpha_t}$ and
+$\sqrt{1-\bar\alpha_t}$. Plots $\beta_t$, $\bar\alpha_t$, and the coefficients for both schedules.}
+\begin{saythis}
+The schedule decides \emph{how fast} we destroy the signal. Beta is the variance of noise added at each
+step. Alpha-bar, the cumulative product, is the fraction of the original signal that survives to step
+$t$ --- so the middle plot, alpha-bar going from one down to zero, is literally the image dissolving.
+The linear schedule destroys information very fast early on; the cosine schedule, in red, is gentler at
+the start and keeps fine detail alive longer. That is why the cosine schedule trains better, and it is
+the one we use for the rest of the day.
+\end{saythis}
+\highlight{Key relation to put on the board:
+$\mathbf{x}_t = \sqrt{\bar\alpha_t}\,\mathbf{x}_0 + \sqrt{1-\bar\alpha_t}\,\boldsymbol\varepsilon$.
+The signal coefficient and the noise coefficient always satisfy
+$(\sqrt{\bar\alpha_t})^2 + (\sqrt{1-\bar\alpha_t})^2 = 1$. Ask: \emph{at what $t$ is half the signal
+gone?}}
+
+\subsection{Forward process visualization (CODE \#6)}
+\whatdoes{Defines \texttt{q\_sample} implementing the closed-form reparameterization
+$\mathbf{x}_t = \sqrt{\bar\alpha_t}\mathbf{x}_0 + \sqrt{1-\bar\alpha_t}\boldsymbol\varepsilon$.
+Uses a \emph{single fixed} noise instance across all timesteps and shows the noisy image at 12
+timesteps (top row) and the scaled noise component (bottom row), with the SNR printed per panel.}
+\begin{saythis}
+Here is the trick that makes diffusion trainable. We do \emph{not} add noise one step at a time. The
+reparameterization lets us jump straight to any timestep $t$ in one line: a bit of the clean image
+plus a bit of Gaussian noise, with the mixing set by the schedule. Watch the top row: at $t=0$ it is
+the clean image, and by $t=999$ it is essentially pure noise. I deliberately reuse the \emph{same}
+noise sample for every column, so you can see it is the \emph{coefficients} changing, not the noise.
+\end{saythis}
+\begin{lstlisting}
+def q_sample(x0, t_idx, sched, noise=None):
+    s = sched['sqrt_a_bar'][t_idx].view(-1,1,1,1)
+    n = sched['sqrt_one_minus'][t_idx].view(-1,1,1,1)
+    return s * x0 + n * noise, noise   # x_t and the epsilon used
+\end{lstlisting}
+\highlight{Closed-form sampling at any $t$ is \emph{the} reason DDPM training is efficient --- no need
+to chain $t$ sequential steps per gradient update. The function also returns the noise $\varepsilon$,
+because that noise is the training target.}
+
+\subsection{Signal-to-noise ratio (CODE \#7)}
+\whatdoes{Computes SNR in dB, $20\log_{10}(\sqrt{\bar\alpha_t}/\sqrt{1-\bar\alpha_t})$, for both
+schedules; plots them, shades signal-dominant versus noise-dominant regions, and prints the timestep
+where SNR crosses 0~dB for each schedule.}
+\begin{saythis}
+The signal-to-noise ratio gives a single number for ``how much real image is left''. Where the curve
+crosses zero decibels, signal and noise are equal --- that is the tipping point. Notice the cosine
+schedule stays in the signal-dominant region much longer. The denoiser spends most of its capacity
+near that crossover, where the task is hardest.
+\end{saythis}
+\highlight{SNR connects the schedule to learning difficulty: the network learns most around the
+$0$~dB region. Ask: \emph{which schedule gives the model more ``easy'' high-SNR examples to learn fine
+detail?}}
+
+\subsection{DDPM oracle reverse step and trajectory (CODE \#8--9)}
+\whatdoes{CODE \#8 precomputes the posterior variance $\tilde\beta_t$ and defines one DDPM reverse step
+using the \emph{true} stored noise as if it were the network prediction (the ``oracle''):
+$\boldsymbol\mu_\theta = \frac{1}{\sqrt{\alpha_t}}\big(\mathbf{x}_t - \frac{\beta_t}{\sqrt{1-\bar\alpha_t}}\boldsymbol\varepsilon\big)$,
+plus posterior-variance noise when $t>0$. CODE \#9 starts at $\mathbf{x}_T$ and iterates all the way
+back to $\mathbf{x}_0$, visualizing $\sim$12 intermediate steps.}
+\begin{saythis}
+Now we run the process backwards. In a real model a neural network would predict the noise; here I
+\emph{cheat} and feed in the true noise we actually added. This is the ``oracle'' --- it shows you the
+best case, what a perfect denoiser could ever do. Starting from pure static, each step removes a
+little noise according to the DDPM update, and the image re-emerges. Importantly, DDPM is
+\emph{stochastic}: at every step except the last we inject a fresh bit of Gaussian noise, scaled by the
+posterior variance.
+\end{saythis}
+\highlight{The oracle separates two questions: ``is the reverse \emph{math} correct?'' (yes, the image
+comes back) versus ``can a network \emph{learn} the noise?'' (that's notebook 03). Emphasize the
+stochasticity term --- it is what distinguishes DDPM from DDIM next.}
+
+\subsection{DDIM oracle reverse step and trajectory (CODE \#10--11)}
+\whatdoes{Defines the DDIM reverse step. It first predicts the clean image
+$\hat{\mathbf{x}}_0 = (\mathbf{x}_t - \sqrt{1-\bar\alpha_t}\,\boldsymbol\varepsilon)/\sqrt{\bar\alpha_t}$,
+then steps to $\mathbf{x}_{t-1} = \sqrt{\bar\alpha_{t-1}}\,\hat{\mathbf{x}}_0 + \sqrt{1-\bar\alpha_{t-1}-\sigma_t^2}\,\boldsymbol\varepsilon + \sigma_t \mathbf{z}$,
+where $\eta$ controls stochasticity. With \texttt{eta = 0.0} the update is fully deterministic. CODE \#11
+runs the oracle DDIM trajectory.}
+\begin{saythis}
+DDIM is the same forward process but a different \emph{reverse} rule. Instead of sampling from a
+Gaussian posterior, it first estimates the clean image directly, then re-noises it to the previous
+level. The parameter eta controls randomness: eta equals one behaves like DDPM, eta equals zero is
+fully deterministic --- no random term at all. Deterministic reverse is the key idea, because it lets
+us \emph{skip steps} and sample in far fewer iterations. Hold that thought: in notebook five it becomes
+the difference between a robot that can react in real time and one that cannot.
+\end{saythis}
+\begin{lstlisting}
+# DDIM: predict clean x0, then jump to the previous noise level
+x0_pred = (x_t - torch.sqrt(1 - a_bar_t) * eps) / torch.sqrt(a_bar_t)
+x_prev  = torch.sqrt(a_bar_prev) * x0_pred + dir_xt + sigma_t * z
+\end{lstlisting}
+\highlight{Same training, two samplers. DDIM with $\eta=0$ is deterministic and supports large step
+strides $\Rightarrow$ fast sampling. Ask: \emph{why can a deterministic sampler safely take bigger
+steps than a stochastic one?}}
+
+\subsection{Forward vs reverse side-by-side (CODE \#12)}
+\whatdoes{Lays out three rows over matched timesteps: forward $q$ (top), reverse DDPM (middle), reverse
+DDIM (bottom), so you can compare the destruction and the two reconstructions step by step.}
+\begin{saythis}
+This single figure is the summary of the notebook. Top row: the forward process eating the image.
+Middle and bottom: the two reverse processes rebuilding it. Read it left-to-right on top and notice the
+reverse rows put it back together. With the oracle noise, both DDPM and DDIM recover the image
+faithfully --- the difference between them is speed and determinism, which we will exploit later.
+\end{saythis}
+\highlight{Takeaway table for the board: forward closed-form = jump to any $t$; reverse = iterate;
+network learns $\varepsilon_\theta \approx \varepsilon$; loss is plain MSE. This sets up notebook 03.}
+
+% ===========================================================================
+\section{Notebook 03 --- Complete DDPM Training Pipeline}
+% ===========================================================================
+
+\textbf{Learning goal.} Build a full Denoising Diffusion Probabilistic Model from scratch and
+\emph{train} it on MNIST: cosine schedule, a U-Net with sinusoidal time embeddings, AdaGN time
+conditioning and a bottleneck self-attention block, the simple MSE noise-prediction loss
+$\mathcal{L}_{\text{simple}}$, and a 1000-step ancestral sampler. \textbf{Strategy: launch the training
+cell early (CODE \#9) and lecture through notebook 04 while it runs.}
+
+\subsection{Setup, imports, configuration (CODE \#1--3)}
+\whatdoes{CODE \#1 checks CUDA; CODE \#2 imports torch / torchvision / tqdm and seeds. CODE \#3 is the
+config: \texttt{IMG\_SIZE = 28}, \texttt{CHANNELS = 1}, \texttt{T\_STEPS = 1000}, \texttt{BATCH\_SIZE = 128},
+\texttt{LR = 2e-4}, \textbf{\texttt{NUM\_EPOCHS = 20}}, \texttt{MODEL\_DIM = 64}.}
+\begin{saythis}
+Here is the whole experiment in one cell. Twenty epochs on MNIST will give us recognizable digits in
+roughly fifteen to thirty minutes on this T4 GPU. That is too long to watch in silence, so the plan is:
+we will read through the model now, hit ``run'' on the training cell, and then jump to notebook four
+while this trains in the background.
+\end{saythis}
+\highlight{Point at \texttt{NUM\_EPOCHS = 20}. Publication quality needs 100+; 20 is the teaching
+compromise. The comment in the code even says so.}
+
+\subsection{MNIST dataset (CODE \#4)}
+\whatdoes{Builds a torchvision MNIST \texttt{DataLoader} with \texttt{Normalize((0.5,),(0.5,))} to map
+pixels to $[-1,1]$, prints sizes, and shows a $4\times4$ grid of training digits.}
+\begin{saythis}
+MNIST: sixty thousand twenty-eight by twenty-eight grayscale digits. The only preprocessing that matters
+is the normalize step --- same idea as notebook one, mapping pixels to minus-one-to-one so the data
+matches the noise prior.
+\end{saythis}
+\highlight{Same normalization principle as NB01, now in a real \texttt{transforms} pipeline. Ask:
+\emph{what would happen to training if we left the data in $[0,1]$?}}
+
+\subsection{Cosine noise schedule (CODE \#5)}
+\whatdoes{Defines the cosine $\beta$ schedule and precomputes \texttt{alphas\_cumprod}, its previous-step
+shift, $\sqrt{\bar\alpha_t}$, $\sqrt{1-\bar\alpha_t}$, $\sqrt{1/\alpha_t}$, and the posterior variance.
+Defines \texttt{extract} (gathers per-sample schedule values) and plots $\bar\alpha_t$ and the mixing
+coefficients.}
+\begin{saythis}
+Exactly the cosine schedule from notebook two, but now we precompute every quantity we will need for
+training and sampling and cache it on the GPU. The little \texttt{extract} helper just picks out the
+right schedule value for each example in the batch, given that each example gets a different random
+timestep.
+\end{saythis}
+\highlight{Precomputing schedule tensors once is a standard efficiency pattern --- do it on the device,
+index with \texttt{extract}.}
+
+\subsection{Forward process on MNIST (CODE \#6)}
+\whatdoes{Defines \texttt{q\_sample} (closed-form $\mathbf{x}_t$) and shows 4 digits noised at 6 timesteps,
+visually confirming the forward process on real data.}
+\begin{saythis}
+Same closed-form forward sampling as before, now on actual digits. Notice a ``4'' is still faintly
+visible at $t$ equals two-fifty, mostly gone by five hundred, and pure noise by the end. This is the
+supervision signal: at training time we will pick a random $t$, noise the digit this much, and ask the
+network what noise we added.
+\end{saythis}
+
+\subsection{U-Net building blocks (CODE \#7)}
+\whatdoes{Defines (a) \texttt{SinusoidalEmbedding} encoding the integer timestep with sine/cosine
+frequencies; (b) \texttt{ResBlock} with two conv layers and \emph{AdaGN} time conditioning --- the time
+embedding produces a scale and shift applied after group norm; (c) a bottleneck \texttt{SelfAttention}
+block.}
+\begin{saythis}
+Three ideas power the U-Net. First, the network must know \emph{which} timestep it is denoising, so we
+encode $t$ with the same sinusoidal trick used for positions in Transformers. Second, that time
+embedding is injected into every residual block as a learned scale-and-shift after group norm --- this
+is AdaGN, adaptive group normalization. It tells each block ``you are at a high-noise step'' or ``a
+low-noise step'' and the block adapts. Third, one self-attention block at the bottleneck lets distant
+pixels talk to each other, which convolutions alone cannot do.
+\end{saythis}
+\begin{lstlisting}
+# AdaGN time conditioning inside a ResBlock
+scale, shift = self.time_proj(t_emb).chunk(2, dim=1)
+h = self.act(self.norm2(h) * (1 + scale[...,None,None]) + shift[...,None,None])
+\end{lstlisting}
+\highlight{The three pillars --- sinusoidal time embedding, AdaGN conditioning, bottleneck attention ---
+reappear in notebook 04 and (with FiLM instead of AdaGN) in notebook 05. Ask: \emph{why does the
+network need the timestep at all, if it only ever sees $\mathbf{x}_t$?}}
+
+\subsection{Full U-Net (CODE \#8)}
+\whatdoes{Assembles the encoder ($28\to14\to7$ via MaxPool, channels $64\to128\to256$), the
+attention bottleneck, and the decoder with ConvTranspose upsampling and concatenated skip connections,
+ending in a $1\times1$ conv that outputs the predicted noise. Runs a shape sanity check and prints the
+parameter count.}
+\begin{saythis}
+This is the classic U-shape: contract down to a small spatial bottleneck, then expand back up, with skip
+connections carrying fine detail across. The crucial property: input shape equals output shape ---
+twenty-eight by twenty-eight in, twenty-eight by twenty-eight out --- because the output \emph{is} the
+predicted noise, one value per pixel. The sanity check confirms exactly that.
+\end{saythis}
+\highlight{Output shape $=$ input shape is non-negotiable for $\varepsilon_\theta$. Skip connections are
+what make U-Nets so good at preserving detail.}
+
+\subsection{Training loop (CODE \#9) --- LAUNCH THIS, then go to NB 04}
+\whatdoes{The $\mathcal{L}_{\text{simple}}$ training loop. Each step: sample a batch $\mathbf{x}_0$,
+a random $t$, fresh noise $\boldsymbol\varepsilon$; form $\mathbf{x}_t$; predict noise with the U-Net;
+minimize \texttt{mse\_loss(pred\_noise, noise)}; clip gradients to 1.0; Adam step; cosine LR schedule.
+Saves a checkpoint every 5 epochs.}
+\begin{saythis}
+And here is the entire learning objective, and it is shockingly simple. For each image, pick a random
+noise level, actually add that noise, and train the network to predict the noise back out. That is it
+--- mean squared error between true and predicted noise. No adversarial game, no likelihood gymnastics,
+just regression. I am going to start this cell \emph{now}. It will run for the next fifteen to thirty
+minutes. While it trains, we switch to notebook four and look at the different network architectures we
+could have plugged in here.
+\end{saythis}
+\begin{lstlisting}
+t     = torch.randint(0, T_STEPS, (x0.size(0),), device=DEVICE)
+noise = torch.randn_like(x0)
+xt, _ = q_sample(x0, t, noise)
+loss  = F.mse_loss(model(xt, t), noise)   # L_simple
+\end{lstlisting}
+\highlight{This is $\mathcal{L}_{\text{simple}} = \mathbb{E}\big[\|\varepsilon - \varepsilon_\theta(\mathbf{x}_t,t)\|^2\big]$.
+Gradient clipping stabilizes early training. \textbf{Start the cell before lecturing.} Ask:
+\emph{why is regressing on noise easier to optimize than regressing on the clean image directly?}}
+
+\subsection{Loss curve (CODE \#10)}
+\whatdoes{Plots the per-epoch average MSE loss; prints the final loss.}
+\begin{saythis}
+When we come back, this is the first thing we check: a loss that drops and flattens. The absolute number
+is not meaningful --- it is the \emph{shape} that tells us learning happened.
+\end{saythis}
+\highlight{Noise-prediction MSE plateaus quickly; further gains are mostly in sample quality, not loss.}
+
+\subsection{DDPM sampler (CODE \#11)}
+\whatdoes{Implements the ancestral DDPM sampler: start from $\mathbf{x}_T\sim\mathcal{N}(0,I)$, loop
+$t=999\ldots0$, predict noise, compute the posterior mean, add posterior-variance noise when $t>0$.
+Generates 16 samples. Runs 1000 network evaluations per sample.}
+\begin{saythis}
+Now the network is the denoiser --- no more oracle. We start from pure noise and run the reverse process
+one thousand times. Notice the cost: one thousand forward passes through the U-Net to make a single
+batch of digits. That is the DDPM bottleneck, and it is exactly why DDIM and friends exist.
+\end{saythis}
+\highlight{1000 network calls per sample $=$ slow. Connect forward to the speed problem we solve in
+notebook 05 with DDIM. Ask: \emph{how could we cut this to 50 steps without retraining?}}
+
+\subsection{Generated grid, denoising trajectory, real-vs-fake (CODE \#12--14)}
+\whatdoes{CODE \#12 shows a $4\times4$ grid of generated digits and saves it. CODE \#13 saves and plots
+the denoising trajectory of a single sample from noise to digit. CODE \#14 puts real MNIST (top) next to
+generated (bottom).}
+\begin{saythis}
+Here is the payoff. After only twenty epochs these are clearly digits --- maybe a bit soft, and a few
+ambiguous ones, which is honest for twenty epochs. The trajectory plot is my favourite: you literally
+watch a digit condense out of static. And side by side with real MNIST, our generations hold up well.
+More epochs would sharpen them further.
+\end{saythis}
+\highlight{Manage expectations: 20 epochs gives good-but-soft digits. The denoising trajectory is the
+single best visual for ``what a diffusion model does''. We have now built DDPM end-to-end from scratch.}
+
+% ===========================================================================
+\section{Notebook 04 --- Architectures for Diffusion Models}
+% ===========================================================================
+
+\textbf{Learning goal.} Drive home that the diffusion process is \emph{architecture-agnostic}: any
+network mapping $(\mathbf{x}_t, t)\mapsto$ a same-shape tensor works as $\varepsilon_\theta$. We build
+four backbones --- a 2D U-Net, a 2D U-Net with multi-scale attention, a 1D U-Net for sequences, and a
+DiT Transformer --- run a forward pass through each, and benchmark parameter counts and speed. The 1D
+U-Net is the backbone of Diffusion Policy. \textbf{Cover this entire notebook while NB 03 trains.}
+
+\subsection{Setup, imports, shared primitives (CODE \#1--3)}
+\whatdoes{CODE \#1--2 check CUDA / import. CODE \#3 defines the shared building blocks reused by all four
+models: \texttt{SinusoidalEmbedding}, \texttt{TimeEmbedMLP}, and an \texttt{AdaGN} module that conditions
+activations on the time embedding via scale and shift --- generalized to any number of spatial dimensions.}
+\begin{saythis}
+Before the four architectures, notice they all share the same time-conditioning machinery from notebook
+three: embed the timestep, push it through a small MLP, and inject it as a scale-and-shift. Writing it
+once here makes the point that the conditioning mechanism is shared; only the backbone differs.
+\end{saythis}
+\highlight{The AdaGN here is written dimension-agnostically (works for 1D and 2D) --- foreshadowing the
+1D U-Net.}
+
+\subsection{2D U-Net (CODE \#4)}
+\whatdoes{Builds \texttt{UNet2D}: residual blocks with AdaGN, self-attention at the $7\times7$ bottleneck
+only, MaxPool down / ConvTranspose up with skip connections; runs a forward pass on a
+$(2,1,28,28)$ input and prints the parameter count ($\sim$3M).}
+\begin{saythis}
+This is the DDPM workhorse, essentially the model we just trained in notebook three, re-expressed with
+the shared blocks. Attention only at the bottleneck, where the spatial grid is small and global
+reasoning is cheap. Around three million parameters.
+\end{saythis}
+\highlight{Bottleneck-only attention keeps cost down on small images. Ask: \emph{at $7\times7$ the
+attention matrix is $49\times49$ --- why would full-resolution attention at $28\times28$ be much more
+expensive?}}
+
+\subsection{2D U-Net with multi-scale attention (CODE \#5)}
+\whatdoes{Builds \texttt{UNet2DAttentionFull} (Improved DDPM): adds self-attention at \emph{every}
+resolution, not just the bottleneck. Forward pass and parameter count ($\sim$5M).}
+\begin{saythis}
+The improvement from Nichol and Dhariwal: put attention at \emph{every} scale, so the model gets global
+context even at high resolution, not only at the bottleneck. It costs more parameters and compute --- the
+attention is order $N$-squared in the number of pixels --- but it helps on larger, more detailed images.
+\end{saythis}
+\highlight{More attention $=$ more global context but $O(N^2)$ cost. This is the central scaling tension
+for image diffusion.}
+
+\subsection{1D U-Net for sequences (CODE \#6) --- the Diffusion Policy backbone}
+\whatdoes{Builds \texttt{UNet1D}: identical U-Net structure but every \texttt{Conv2d} becomes
+\texttt{Conv1d}, operating on \texttt{(B, D, T)} = batch $\times$ feature dim $\times$ sequence length,
+with kernel size 5. Forward pass on a $(2,2,16)$ trajectory and parameter count.}
+\begin{saythis}
+This is the one that matters for the rest of the day. Take the exact same U-Net and swap every
+two-dimensional convolution for a one-dimensional one. Now it slides along \emph{time} instead of across
+\emph{space}. The input is batch by action-dimension by horizon. This is the backbone of Diffusion
+Policy --- the network we will condition on observations and train in notebook five. Same diffusion
+maths, same U-Net skeleton, different convolution.
+\end{saythis}
+\begin{lstlisting}
+# Trajectories: (B, D_action, T_horizon); 2D conv -> 1D conv
+class UNet1D(nn.Module):
+    def __init__(self, in_ch=2, dim=64, t_dim=256):
+        self.inc = nn.Conv1d(in_ch, dim, 3, padding=1)  # ...same U-Net, 1D
+\end{lstlisting}
+\highlight{This is the literal bridge from images to robots: \texttt{Conv2d}$\to$\texttt{Conv1d}. Ask:
+\emph{what does a 1D convolution along the time axis capture about a trajectory?} (local temporal
+smoothness / short action motifs).}
+
+\subsection{DiT --- Diffusion Transformer (CODE \#7)}
+\whatdoes{Builds a simplified DiT (Peebles \& Xie): patchify the image into tokens, linear-project, add a
+positional embedding, run $L=6$ Transformer blocks with \emph{AdaLayerNorm} time conditioning, then
+unpatchify back to the noise prediction. Forward pass and parameter count ($\sim$15M).}
+\begin{saythis}
+The fourth option throws away the U-Net entirely and uses a pure Transformer on image patches, with time
+injected through adaptive layer norm instead of adaptive group norm. Its advantage is that it has no
+built-in locality bias --- it can attend globally from the very first layer --- and it scales beautifully
+with data and compute. The cost is that it has many more parameters and is data-hungry.
+\end{saythis}
+\highlight{DiT scales with compute where U-Nets saturate; but it needs more data. Same diffusion process,
+radically different inductive bias.}
+
+\subsection{Benchmark and schematics (CODE \#8--9)}
+\whatdoes{CODE \#8 warms up and times 20 forward passes of each model (batch 2) and bar-charts parameter
+count and forward-pass time. CODE \#9 draws schematic block diagrams of all four architectures.}
+\begin{saythis}
+Let's compare them head to head. Read off two things: the DiT has by far the most parameters, and the
+1D U-Net is the leanest because sequences are low-dimensional. That last point is exactly why Diffusion
+Policy can run fast enough to control a robot. All four, remember, are interchangeable as the noise
+predictor --- the choice is about your data, not about the diffusion maths.
+\end{saythis}
+\highlight{The 1D U-Net's small footprint is what makes real-time trajectory diffusion practical ---
+the perfect segue to notebook 05. By now, notebook 03 should be finished: go back and show its samples.}
+
+% ===========================================================================
+\section{Notebook 05 --- Diffusion Policy on the Real Push-T Dataset}
+% ===========================================================================
+
+\textbf{Learning goal.} Train a real \emph{Diffusion Policy} (Chi et al., 2023) on the Push-T
+benchmark, where an end-effector pushes a T-shaped block to a target. We engineer observations and
+delta-actions, normalize them, build a conditional 1D U-Net that denoises action chunks given the past
+observations, train it, and compare DDPM versus DDIM sampling --- showing why DDIM's $\sim$10$\times$
+speed-up is what makes 10~Hz robot control feasible. \textbf{Strategy: run setup + download + model,
+launch training (CODE \#12) early, lecture, then show results.}
+
+\subsection{Setup with extra deps (CODE \#1)}
+\whatdoes{Beyond the usual CUDA check, this Setup cell \texttt{pip install}s \texttt{zarr} and
+\texttt{gdown} if \texttt{zarr} is not importable --- needed to read and download the dataset.}
+\begin{saythis}
+This notebook needs two extra libraries that Colab does not ship: \texttt{zarr}, to read the dataset's
+chunked array format, and \texttt{gdown}, to fetch it from Google Drive. The setup cell installs them
+if they are missing. Run it first.
+\end{saythis}
+\highlight{Note: the notebook reads the dataset with zarr v3 using \texttt{zarr\_format=2}, which
+requires Python $\ge 3.11$ --- fine on current Colab. If you ever run this on an older local Python, this
+is the first thing that breaks.}
+
+\subsection{Imports and configuration (CODE \#2--3)}
+\whatdoes{CODE \#2 imports and seeds. CODE \#3 is the config: \texttt{D\_OBS = 4}, \texttt{D\_ACTION = 2},
+\textbf{\texttt{T\_OBS = 2}} (observation horizon), \textbf{\texttt{T\_PRED = 16}} (prediction horizon),
+\texttt{T\_STEPS = 100} diffusion steps, \texttt{BATCH\_SIZE = 64}, \textbf{\texttt{NUM\_EPOCHS = 100}},
+\texttt{LR = 1e-3}.}
+\begin{saythis}
+These five numbers define the policy. We look at the last two observations --- that is the observation
+horizon, $T_o$ equals two --- and from them we predict the next sixteen actions in one shot, the
+prediction horizon $T_p$ equals sixteen. Predicting a whole \emph{chunk} of actions, not one step, is a
+core Diffusion Policy idea: it gives temporally consistent, non-jittery motion. Also notice we use only
+one hundred diffusion steps here, not a thousand --- action chunks are small and easy, so far fewer
+steps suffice.
+\end{saythis}
+\highlight{$T_o=2$, $T_p=16$, $D_a=2$, $T=100$. Action chunking $=$ temporal consistency. One hundred
+epochs is $\approx$30--40~min on a T4 --- this is the cell we will background. Ask: \emph{why predict 16
+actions at once instead of replanning every single step?}}
+
+\subsection{Dataset download (CODE \#4) --- the added gdown cell}
+\whatdoes{If the dataset directory is absent, this cell downloads \texttt{pusht\_cchi\_v7\_replay.zarr.zip}
+($\approx$31~MB) from Google Drive via \texttt{gdown} and unzips it into \texttt{data/pusht/}; otherwise it
+reports the dataset is already present.}
+\begin{saythis}
+This cell fetches the real dataset --- about thirty-one megabytes --- straight from Google Drive and
+unzips it. It only does this once; on a re-run it sees the folder and skips. Give it a few seconds. This
+is real robot demonstration data, not the synthetic toys from notebook one: two hundred and six expert
+episodes of pushing a T-block.
+\end{saythis}
+\begin{lstlisting}
+if not os.path.isdir(os.path.join(DATA_DIR, "data")):
+    gdown.download(id="1KY1InLurp...", output=_zip, quiet=False)
+    with zipfile.ZipFile(_zip) as zf:
+        zf.extractall(DATA_DIR)
+\end{lstlisting}
+\highlight{Common failure modes: no internet, a Google Drive quota error, or a stale partial zip. If the
+download fails, the fix is to delete \texttt{data/pusht\_cchi\_v7\_replay.zarr.zip} and re-run. Watch the
+\texttt{gdown} progress bar before moving on.}
+
+\subsection{Load the dataset (CODE \#5)}
+\whatdoes{Opens the zarr groups with \texttt{zarr\_format=2}, reads \texttt{data/state} $(N,5)$,
+\texttt{data/action} $(N,2)$ and \texttt{meta/episode\_ends} $(206,)$; derives per-episode starts and
+lengths and prints shapes, ranges, and episode statistics ($N\approx25{,}650$ timesteps, 206 episodes).}
+\begin{saythis}
+Here is the structure of the data. The state is five numbers per timestep: the agent's x and y, the
+block's x and y, and the block's angle. The action is the absolute target position the controller was
+commanded. And \texttt{episode\_ends} tells us where one demonstration stops and the next begins ---
+essential, because we must never let a training window straddle two episodes.
+\end{saythis}
+\highlight{Positions are in pixel space (0--512). Episode boundaries matter for windowing. Ask:
+\emph{why would mixing two episodes in one observation-action window corrupt training?}}
+
+\subsection{Feature engineering (CODE \#6)}
+\whatdoes{Computes per-episode velocity as finite differences (zero at each episode start), builds the
+observation \texttt{[agent\_x, agent\_y, vx, vy]} $(N,4)$, and the \emph{delta} action
+\texttt{action - agent\_pos} $=$ \texttt{[dx, dy]} $(N,2)$. Prints statistics.}
+\begin{saythis}
+Two design decisions here. First, we enrich the observation with velocity --- position alone does not
+tell you which way the agent is moving, and that matters for prediction. We compute velocity as the
+difference between consecutive positions, reset to zero at each episode start. Second, and importantly,
+we predict a \emph{delta} action: not ``go to pixel 300,'' but ``move 40 pixels right from where you
+are.'' Relative targets are far easier to learn and generalize.
+\end{saythis}
+\highlight{Delta (relative) actions $=$ better generalization than absolute targets. Velocity makes the
+observation Markov-ish. Ask: \emph{why reset velocity to zero at episode boundaries?}}
+
+\subsection{Normalization statistics (CODE \#7)}
+\whatdoes{Computes per-dimension mean and std of observations and actions over the whole dataset (std
+clipped at $10^{-3}$); prints them. These are stored and later used to normalize inputs and
+\emph{de}-normalize generated actions.}
+\begin{saythis}
+Same lesson as notebook one, now for real: standardize every channel to zero mean, unit variance. We
+compute these statistics once over the whole dataset and keep them. They get saved into every checkpoint
+too, because at deployment we must apply the \emph{exact same} normalization and then invert it on the
+output --- otherwise the predicted motions are garbage.
+\end{saythis}
+\highlight{The stats are saved \emph{in the checkpoint} --- normalization is part of the policy, not an
+afterthought. Forgetting to de-normalize at inference is the classic bug.}
+
+\subsection{Dataset visualization (CODE \#8)}
+\whatdoes{Four-panel figure: agent trajectories colored by episode, agent-vs-block position density, the
+delta-action $[dx,dy]$ scatter with 1$\sigma$/2$\sigma$ ellipses, and the episode-length histogram with
+CDF; plus a printed summary table.}
+\begin{saythis}
+Spend a moment on the bottom-left panel: the distribution of delta-actions. It is roughly centred on
+zero, slightly spread --- and crucially, it is \emph{multi-modal} in places: from a given state there are
+often several reasonable pushes. That multi-modality is precisely why a diffusion policy beats a simple
+regression-to-the-mean controller, which would average two good options into one bad one.
+\end{saythis}
+\highlight{Multi-modality of demonstrations is the core motivation for generative (vs regression)
+policies. The action ellipses show the scale the network must learn to reproduce.}
+
+\subsection{Dataset class --- observation/action windows (CODE \#9)}
+\whatdoes{Defines \texttt{PushTDataset}: normalizes obs and actions, then enumerates valid index pairs so
+that each sample is the last $T_o$ observations \texttt{(T\_obs, D\_obs)} and the next $T_p$ actions
+\texttt{(T\_pred, D\_action)}, excluding windows that cross an episode boundary. Builds the
+\texttt{DataLoader} and prints shapes.}
+\begin{saythis}
+This turns the long demonstration streams into training examples. Each example is a little window: here
+are the last two observations, and here are the sixteen actions the expert took next. We slide this
+window through every episode but stop it from ever spanning two episodes. The result is tens of
+thousands of observation-to-action-chunk pairs --- our supervised dataset.
+\end{saythis}
+\highlight{The model learns $p(\text{action chunk} \mid \text{recent observations})$. The boundary
+exclusion in the index loop is the subtle correctness detail.}
+
+\subsection{Noise schedule (CODE \#10)}
+\whatdoes{The same cosine schedule, now with \texttt{T\_STEPS = 100}; precomputes all schedule tensors and
+defines \texttt{q\_sample} for action chunks of shape \texttt{(B, D\_action, T\_pred)}.}
+\begin{saythis}
+The diffusion schedule is identical to the image case --- only the tensor shape changed, from images to
+action chunks, and we use a hundred steps instead of a thousand. I want you to feel how little changes:
+the entire forward process is the same one line we have seen all day.
+\end{saythis}
+\highlight{Reinforce the unifying theme: same schedule, same \texttt{q\_sample}, different data shape.}
+
+\subsection{Conditional 1D U-Net (CODE \#11)}
+\whatdoes{Defines \texttt{DiffusionPolicy1D}: a 1D U-Net (the notebook-04 backbone) whose residual blocks
+are \emph{FiLM}-conditioned on a context vector built by concatenating the sinusoidal time embedding with
+an MLP-embedding of the flattened observation window. \texttt{forward(noisy\_action, obs, t)} returns the
+predicted noise on the action chunk. Channels $128\to256\to512$. Sanity check and parameter count.}
+\begin{saythis}
+Here it all comes together. The backbone is the 1D U-Net from notebook four. The new ingredient is
+\emph{conditioning}: the network must denoise the action chunk \emph{given} the observation. We do this
+with FiLM --- we embed the timestep and the observations, concatenate them into one context vector, and
+that context produces a scale-and-shift inside every block, just like AdaGN but driven by the
+observation too. So the network's question is: ``given what I just saw, and given this noise level, what
+noise did I add to this action chunk?''
+\end{saythis}
+\begin{lstlisting}
+def forward(self, noisy_action, obs, t):
+    cond = torch.cat([self.time_emb(t),
+                      self.obs_emb(obs.flatten(1))], dim=1)  # FiLM context
+    # ... 1D U-Net blocks, each FiLM-conditioned on `cond`
+\end{lstlisting}
+\highlight{FiLM conditioning $=$ time embedding $\oplus$ observation embedding $\to$ per-block
+scale/shift. This is the unconditional DDPM of NB03 plus an observation conditioning signal. Ask:
+\emph{what would the policy degenerate into if we removed the observation from the conditioning?}}
+
+\subsection{Training (CODE \#12) --- LAUNCH THIS, then lecture}
+\whatdoes{AdamW + cosine LR. Each step: permute the action batch to \texttt{(B, D\_action, T\_pred)}, draw
+a random $t$ and noise, form the noisy action chunk, predict noise conditioned on the observation, and
+minimize MSE. Gradient clip at 1.0. Saves a checkpoint (with model + normalization stats) every 10
+epochs over 100 epochs.}
+\begin{saythis}
+The training objective is identical to MNIST: predict the noise, minimize mean squared error. The only
+difference is that the prediction is now conditioned on the observation. I will start this cell now ---
+it runs for about thirty to forty minutes, and saves a checkpoint every ten epochs, so even if we stop
+early we have something usable. While it trains, let's talk through the Diffusion Policy idea and how it
+bridges to the lecture.
+\end{saythis}
+\highlight{Same $\mathcal{L}_{\text{simple}}$, now conditional. Checkpoint-every-10 is your safety net.
+\textbf{Start the cell, then lecture.} If completely out of time, use CODE \#18 to load a checkpoint.}
+
+\subsection{Loss curve (CODE \#13)}
+\whatdoes{Plots the per-epoch MSE on a log scale and prints the final loss.}
+\begin{saythis}
+On a log scale you can see the loss drop over more than an order of magnitude. As before, the shape ---
+steady decrease then plateau --- is what tells us the policy has learned the demonstration distribution.
+\end{saythis}
+
+\subsection{DDPM and DDIM samplers (CODE \#14)}
+\whatdoes{Defines two inference functions, both taking a raw observation window, normalizing it,
+generating $N$ action chunks, and de-normalizing back to pixel-delta space. \texttt{sample\_actions\_ddpm}
+runs all 100 stochastic reverse steps; \texttt{sample\_actions\_ddim} runs only \texttt{ddim\_steps=10}
+deterministic steps via the predict-$\hat{\mathbf{x}}_0$-then-jump rule.}
+\begin{saythis}
+Two ways to generate actions from the same trained network. DDPM runs the full hundred-step stochastic
+reverse process. DDIM, the fast one, skips most steps: it estimates the clean action chunk and jumps
+ahead, in just ten steps. Both end with the de-normalization step --- mapping the network's output back
+into real pixel-delta units the robot can execute. Notice the network weights are identical; only the
+sampler changes.
+\end{saythis}
+\begin{lstlisting}
+# DDIM step on action chunks: predict x0, jump to previous level
+x0_hat = ((x - torch.sqrt(1-ab_i)*eps) / torch.sqrt(ab_i)).clamp(-5,5)
+x      = torch.sqrt(ab_p) * x0_hat + torch.sqrt(1-ab_p) * eps
+\end{lstlisting}
+\highlight{Same weights, two samplers --- the lesson from NB02 made practical. The \texttt{clamp} on
+$\hat{\mathbf{x}}_0$ stabilizes the few-step DDIM. De-normalization is mandatory.}
+
+\subsection{Visualize generated action chunks (CODE \#15)}
+\whatdoes{Picks three observation windows from episode 0, samples 15 action chunks with each sampler,
+integrates each delta-action chunk into an absolute path from the current position, and overlays the
+samples (colored) against the ground-truth demonstration (black) and the current position.}
+\begin{saythis}
+This is the moment of truth. For three different situations, we ask the policy for fifteen candidate
+action chunks and draw them. Two things to look for. First, the coloured samples cluster around the
+black ground-truth path --- the policy has learned sensible pushes. Second, the samples are \emph{varied},
+not identical: that spread \emph{is} the multi-modality we wanted, the policy proposing several
+reasonable plans. Compare the DDPM row with the DDIM row --- ten steps gives essentially the same quality
+as a hundred.
+\end{saythis}
+\highlight{Samples should bracket the ground truth and show diversity. DDIM(10) $\approx$ DDPM(100) in
+quality. Ask: \emph{if all 15 samples were identical, what would that tell us about the policy?}}
+
+\subsection{DDPM vs DDIM speed (CODE \#16) --- the real-time argument}
+\whatdoes{Times one query (10 samples) for DDPM (100 steps) versus DDIM (10 steps), prints both times and
+the speed-up, and checks feasibility against a 10~Hz control budget (100~ms per query).}
+\begin{saythis}
+And here is why we care. DDPM takes the full hundred steps; DDIM takes ten and is roughly an order of
+magnitude faster. Now apply the robot's constraint: a ten-hertz controller has just one hundred
+milliseconds to decide its next move. The full DDPM sampler is usually too slow to hit that budget; the
+ten-step DDIM sampler fits comfortably. \emph{That} is the practical reason DDIM-style fast sampling is
+not a luxury but a requirement for closing the loop on a real robot.
+\end{saythis}
+\highlight{This is the headline result of the session: $\sim$10$\times$ speed-up makes 10~Hz control
+feasible without retraining. Train once, sample fast. Ask: \emph{what else could we trade --- horizon,
+model size --- to fit the 100~ms budget?}}
+
+\subsection{Action distribution analysis and checkpoint loading (CODE \#17--18)}
+\whatdoes{CODE \#17 samples many action chunks across 50 observations (DDIM) and compares the generated
+$[dx,dy]$ distribution against the ground-truth distribution side by side. CODE \#18 defines
+\texttt{load\_checkpoint} (restoring weights \emph{and} normalization stats) and lists available
+checkpoints; the load line is commented out.}
+\begin{saythis}
+Finally, a population-level check: do the actions the policy generates have the same overall distribution
+as the real data? The two scatter clouds should look alike in shape and spread --- if they do, the policy
+has matched the demonstration distribution, not just a few examples. And the very last cell shows how to
+load any saved checkpoint, including its normalization statistics, so you can skip training next time and
+go straight to sampling.
+\end{saythis}
+\highlight{Distribution match (not just per-query plausibility) is the real success criterion.
+\texttt{load\_checkpoint} restores normalization stats too --- reuse it to demo without retraining.}
+
+% ===========================================================================
+\section{Closing --- Key Takeaways and the Bridge to the Lecture}
+% ===========================================================================
+
+\paragraph{What we proved with our hands today.}
+\begin{itemize}
+  \item \textbf{One process, many modalities.} The same forward/reverse diffusion maths drove images
+  (NB01--03), and trajectories (NB05). Only the data \emph{shape} and the network \emph{backbone}
+  changed. We literally turned an image U-Net into a trajectory U-Net by swapping \texttt{Conv2d} for
+  \texttt{Conv1d} (NB04).
+  \item \textbf{Forward is a one-liner; the network learns to reverse it.} The closed-form
+  $\mathbf{x}_t = \sqrt{\bar\alpha_t}\mathbf{x}_0 + \sqrt{1-\bar\alpha_t}\boldsymbol\varepsilon$ makes
+  training cheap, and the objective is just MSE noise prediction,
+  $\mathcal{L}_{\text{simple}} = \mathbb{E}\|\varepsilon - \varepsilon_\theta(\mathbf{x}_t,t)\|^2$
+  (NB02--03, NB05).
+  \item \textbf{Normalization is part of the model.} Every modality is scaled to roughly
+  $\mathcal{N}(\mathbf{0},\mathbf{I})$; in NB05 the normalization statistics live inside the checkpoint
+  and must be inverted at inference.
+  \item \textbf{Architecture is a choice, not a constraint.} 2D U-Net, multi-scale-attention U-Net,
+  1D U-Net, and DiT are all interchangeable noise predictors (NB04); pick by data and compute.
+  \item \textbf{Sampling speed decides real-time feasibility.} DDPM's 100--1000 steps are slow; DDIM
+  reaches comparable quality in $\sim$10 steps, giving the $\sim$10$\times$ speed-up that lets a
+  Diffusion Policy run inside a 10~Hz control loop (NB05).
+\end{itemize}
+
+\paragraph{The bridge to the lecture.} The practical path we walked ---
+\textbf{DDPM} (the from-scratch denoiser, NB03) $\rightarrow$ \textbf{DDIM} (the same model, fast
+deterministic sampling, NB02 \& NB05) $\rightarrow$ \textbf{architectures} (choosing the backbone for
+your modality, NB04) $\rightarrow$ \textbf{Diffusion Policy} (conditional 1D U-Net on action chunks,
+NB05) --- mirrors the lecture's arc. The crucial robotics consequence we demonstrated empirically is the
+last one: \emph{a Diffusion Policy is trained once but must be sampled in real time}, and that is exactly
+what DDIM (and, beyond this session, DPM-Solver and consistency models) buys us. Notebook 05 made the
+$\sim$10$\times$ DDIM speed-up concrete and tied it to the 100~ms-per-decision budget of a 10~Hz
+controller --- the practical link between the generative-model theory and deploying a learned policy on a
+compliant robot.
+
+\paragraph{Where to go next.} Natural extensions raised by the notebooks: richer observations (include
+the block state, longer observation windows, or visual inputs via a CNN encoder), a Transformer backbone
+for longer horizons, classifier-free guidance and latent diffusion for images, and faster solvers for
+even tighter control loops.
+
+\end{document}
