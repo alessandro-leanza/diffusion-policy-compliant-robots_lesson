@@ -219,7 +219,7 @@ This iterative process is exactly why inference efficiency becomes important. Sa
 The robot usually does not execute the whole sampled chunk.
 
 - sample $H$ future actions
-- execute only the first $h \le H$
+- execute only the first $h$ actions
 - observe again
 - sample a new chunk
 
@@ -231,7 +231,7 @@ $$
 \mathbf{A}_{t:t+H}
 \rightarrow
 \left[
-a_t,\ldots,a_{t+h}
+a_t,\ldots,a_{t+h-1}
 \right]
 \quad\text{then replan}
 $$

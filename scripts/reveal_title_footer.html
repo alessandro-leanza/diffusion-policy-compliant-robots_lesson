@@ -1,0 +1,32 @@
+<script>
+  (function () {
+    function updateTitleFooterState(event) {
+      var slide = event && event.currentSlide;
+      if (!slide && window.Reveal && Reveal.getCurrentSlide) {
+        slide = Reveal.getCurrentSlide();
+      }
+
+      var isTitle =
+        slide &&
+        (slide.id === "title-slide" ||
+          slide.classList.contains("title-slide") ||
+          slide.classList.contains("section-divider"));
+
+      document.body.classList.toggle("title-slide-active", Boolean(isTitle));
+    }
+
+    function attachRevealHooks() {
+      if (!window.Reveal || !Reveal.on) {
+        window.setTimeout(attachRevealHooks, 50);
+        return;
+      }
+
+      Reveal.on("ready", updateTitleFooterState);
+      Reveal.on("slidechanged", updateTitleFooterState);
+      window.setInterval(updateTitleFooterState, 250);
+      updateTitleFooterState();
+    }
+
+    attachRevealHooks();
+  })();
+</script>

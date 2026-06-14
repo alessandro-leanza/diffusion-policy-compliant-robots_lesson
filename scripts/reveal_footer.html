@@ -1,0 +1,60 @@
+<script>
+  (function () {
+    function isTitleSlide(slide) {
+      return (
+        slide.id === "title-slide" ||
+        slide.classList.contains("title-slide") ||
+        slide.classList.contains("section-divider")
+      );
+    }
+
+      function addFooter(slide, number) {
+        if (!slide || isTitleSlide(slide) || slide.querySelector(".footer-slide-number")) {
+          return;
+        }
+
+        slide.setAttribute("data-footer-number", String(number));
+
+        var footerNumber = document.createElement("div");
+        footerNumber.className = "footer-slide-number";
+        footerNumber.textContent = String(number);
+        slide.appendChild(footerNumber);
+      }
+
+      function addFooters() {
+        if (!window.Reveal || !Reveal.getSlides) {
+          window.setTimeout(addFooters, 50);
+          return;
+        }
+
+        var numberById = {};
+
+        Reveal.getSlides().forEach(function (slide, index) {
+          if (isTitleSlide(slide)) {
+            return;
+          }
+
+          var number = index + 1;
+          numberById[slide.id] = number;
+          addFooter(slide, number);
+        });
+
+        document.querySelectorAll(".pdf-page section.slide.level2").forEach(function (slide) {
+          addFooter(slide, numberById[slide.id] || slide.getAttribute("data-footer-number"));
+        });
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", addFooters);
+      } else {
+        addFooters();
+      }
+
+      if (window.MutationObserver) {
+        new MutationObserver(addFooters).observe(document.documentElement, {
+          childList: true,
+          subtree: true
+        });
+      }
+    })();
+  </script>

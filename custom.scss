@@ -1,6 +1,6 @@
 /*-- scss:defaults --*/
 
-$body-bg: #f8fbff;
+$body-bg: #ffffff;
 $body-color: #1f2937;
 $presentation-heading-color: #12213f;
 $presentation-heading-font-weight: 650;
@@ -14,7 +14,7 @@ $code-block-border-color: #d8e2f0;
 /*-- scss:rules --*/
 
 :root {
-  --lecture-bg: #f8fbff;
+  --lecture-bg: #ffffff;
   --lecture-surface: #ffffff;
   --lecture-text: #1f2937;
   --lecture-heading: #12213f;
@@ -136,12 +136,15 @@ $code-block-border-color: #d8e2f0;
   justify-content: center;
 }
 
+.reveal section#title-slide.quarto-title-block {
+  justify-content: flex-start !important;
+  padding-top: 5.5em !important;
+}
+
 .reveal section#title-slide.quarto-title-block,
 .reveal section.cover-slide {
   --title-left: 3.7rem;
-  background:
-    linear-gradient(90deg, #dbeafe 0%, #e0f2fe 48%, #f8fbff 86%),
-    var(--lecture-bg);
+  background: var(--lecture-bg);
   align-items: flex-start;
   box-sizing: border-box;
   padding-left: 1.45em;
@@ -239,23 +242,87 @@ $code-block-border-color: #d8e2f0;
 }
 
 .reveal section#title-slide.quarto-title-block::before {
-  background-image: url("../../../../../assets/logos/logo_idsia_transparent.png");
-  background-position: center;
+  /* Per modificare le dimensioni dei loghi:
+     - Cambia 'background-size' (primo valore per IDISIA, secondo per POLIMI)
+     - Regola 'height' e 'width' del contenitore
+     - Regola 'left', 'bottom' per posizionare il blocco
+  */
+  background-image:
+    url("../../../../../assets/logos/logo_idsia_transparent.png"),
+    url("../../../../../assets/logos/logo_polimi.png");
+  background-position:
+    left center,
+    right center;
   background-repeat: no-repeat;
-  background-size: contain;
+  background-size:
+    contain,
+    contain;
   content: "";
-  height: 6.3em;
+  height: 6em;
   position: absolute;
-  right: 2em;
-  top: 1.35em;
-  width: 19.8em;
+  bottom: 2em;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 25em;
   z-index: 2;
 }
 
+.reveal .slides section.slide.level2::after {
+  background-image:
+    url("../../../../../assets/logos/logo_idsia_transparent.png"),
+    url("../../../../../assets/logos/logo_polimi.png");
+  background-position:
+    left center,
+    right center;
+  background-repeat: no-repeat;
+  background-size:
+    auto 1.6em,
+    auto 1.8em;
+  bottom: 1.05em;
+  content: "";
+  height: 2.0em;
+  opacity: 0.88;
+  pointer-events: none;
+  position: absolute;
+  right: 1.05em;
+  width: 9.5em;
+  z-index: 6;
+}
+
+.reveal .slide-number {
+  display: none !important;
+}
+
+.reveal .slides section.slide.level2[data-footer-number]::before {
+  bottom: 1.05rem;
+  color: var(--lecture-heading);
+  content: attr(data-footer-number);
+  font-size: 0.92em;
+  font-weight: 700;
+  left: 50%;
+  line-height: 1;
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 7;
+}
+
+.footer-slide-number {
+  bottom: 1.05em;
+  color: var(--lecture-heading);
+  display: block;
+  font-size: 0.92em;
+  font-weight: 700;
+  left: 0;
+  line-height: 1;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  text-align: center;
+  z-index: 7;
+}
+
 .reveal section.section-divider {
-  background:
-    linear-gradient(90deg, #dbeafe 0%, #e0f2fe 48%, #f8fbff 86%),
-    var(--lecture-bg);
+  background: var(--lecture-bg);
 }
 
 .reveal section.section-divider h1 {

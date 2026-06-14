@@ -82,10 +82,10 @@ Warning: students often invert impedance and admittance; impedance maps motion t
 A common admittance model is:
 
 $$
-M_d \ddot{x}_r + D_d \dot{x}_r + K_d x_r = F_{ext}
+M_d \Delta\ddot{x}_r + D_d \Delta\dot{x}_r + K_d \Delta x_r = F_{ext}
 $$
 
-where $M_d$, $D_d$, and $K_d$ are desired mass, damping, and stiffness.
+where $M_d$, $D_d$, and $K_d$ are desired mass, damping, and stiffness, and $\Delta x_r$ is the force-induced reference displacement.
 
 ::: {.notes}
 Main point: present the admittance equation as a desired dynamic relation, not a literal physical mass-spring-damper attached to the robot.

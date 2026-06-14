@@ -5,8 +5,9 @@ author: "Alessandro Leanza"
 format:
   revealjs:
     theme: [simple, custom.scss]
-    slide-number: true
+    slide-number: false
     chalkboard: true
+    include-after-body: scripts/reveal_footer.html
     incremental: false
     transition: slide
     navigation-mode: vertical
@@ -14,13 +15,13 @@ format:
     height: 900
     smaller: true
 bibliography: references.bib
+include-after-body: scripts/reveal_title_footer.html
+html-math-method: mathml
 execute:
   echo: true
   warning: false
   message: false
 ---
-
-{{< include sections/_00_title.qmd >}}
 
 {{< include sections/_01_motivation.qmd >}}
 
