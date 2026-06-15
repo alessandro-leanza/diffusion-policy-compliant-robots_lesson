@@ -30,14 +30,14 @@ After the lecture, students should understand:
 
 ## Lecture Structure
 
-1. Motivation and compliant robots
-2. Brief imitation learning background
-3. Diffusion models essentials
-4. Diffusion Policy
-5. Inference efficiency for robot control
-6. Compliant control: impedance and admittance
-7. Diffusion Policy + variable admittance control
-8. Open research questions
+1. Motivation: contact-rich manipulation and demonstrations
+2. Imitation learning: behavioral cloning, covariate shift, and multimodality
+3. Diffusion models: noising, denoising, and sampling
+4. Diffusion Policy: action chunks, conditioning, and receding-horizon execution
+5. Inference efficiency: DDPM/DDIM trade-offs and control-loop timing
+6. Compliant control: impedance, admittance, and variable gains
+7. Case study: diffusion policy with variable admittance control
+8. Summary, discussion questions, and references
 
 ## Target Audience
 
@@ -59,14 +59,10 @@ The notebooks are intended to be read and run selectively during or after the le
 - `slides.pdf`: rendered lecture PDF
 - `custom.scss`: minimal academic Quarto/reveal.js theme for the slides
 - `sections/`: modular slide sections included by `slides.qmd`
+- `practice/`: companion notebooks for the exercise part of the lecture
 - `references.bib`: bibliography entries
-- `assets/figures/`: diagrams, plots, and conceptual visuals used in the slides
-- `assets/photos/`: photos, screenshots, and GIF examples used in the slides
-- `assets/logos/`: institutional and project logos
-- `assets/videos/`: video assets used in the slides
-- `assets/prompts/`: visual prompt notes for future assets
+- `assets/`: figures, photos, videos, logos, and visual prompt notes used by the deck
 - `scripts/`: helper scripts
-- `handouts/`: optional teaching material
 
 ## For Contributors
 
