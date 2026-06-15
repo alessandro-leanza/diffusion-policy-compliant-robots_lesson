@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="460" viewBox="0 0 1100 460" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="430" viewBox="0 0 1100 430" role="img" aria-labelledby="title desc">
   <title id="title">Impedance and admittance control are dual in their causality</title>
   <desc id="desc">Impedance control maps a motion error to a rendered force and needs a torque-controlled robot; admittance control maps a measured force to a motion correction and needs a position or velocity interface. Both realize the same target dynamics.</desc>
   <defs>
@@ -7,9 +7,6 @@
     </marker>
     <marker id="arg" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto">
       <path d="M2,2 L10,6 L2,10 Z" fill="#16a34a"/>
-    </marker>
-    <marker id="arc" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto">
-      <path d="M2,2 L10,6 L2,10 Z" fill="#637083"/>
     </marker>
     <style>
       .bg { fill: #f8fbff; }
@@ -22,54 +19,49 @@
       .note { font: 500 16px sans-serif; fill: #637083; }
       .wb { stroke: #2563eb; stroke-width: 3; fill: none; marker-end: url(#arb); }
       .wg { stroke: #16a34a; stroke-width: 3; fill: none; marker-end: url(#arg); }
-      .wc { stroke: #637083; stroke-width: 2; fill: none; marker-end: url(#arc); stroke-dasharray: 6 5; }
       .tagb { font: 700 16px sans-serif; fill: #2563eb; }
       .tagg { font: 700 16px sans-serif; fill: #16a34a; }
     </style>
   </defs>
-  <rect class="bg" width="1100" height="460"/>
+  <rect class="bg" width="1100" height="430"/>
 
   <!-- LEFT: impedance -->
-  <rect class="panel" x="36" y="56" width="490" height="330" rx="6"/>
-  <text class="ttl" x="281" y="96" text-anchor="middle">Impedance control</text>
-  <text class="tagb" x="281" y="122" text-anchor="middle">motion in &#8594; force out</text>
+  <rect class="panel" x="36" y="40" width="490" height="300" rx="6"/>
+  <text class="ttl" x="281" y="78" text-anchor="middle">Impedance control</text>
+  <text class="tagb" x="281" y="104" text-anchor="middle">motion in &#8594; force out</text>
 
-  <text class="io" x="70" y="210" text-anchor="middle">&#916;x</text>
-  <text class="note" x="70" y="232" text-anchor="middle">motion</text>
-  <path class="wb" d="M96 200 L188 200"/>
-  <rect class="blk-b" x="190" y="168" width="190" height="64" rx="6"/>
-  <text class="blab" x="285" y="200" text-anchor="middle">Z(s)</text>
-  <text class="note" x="285" y="222" text-anchor="middle">Ms&#178;+Ds+K</text>
-  <path class="wb" d="M380 200 L468 200"/>
-  <text class="io" x="492" y="210" text-anchor="middle">F</text>
-  <text class="note" x="492" y="232" text-anchor="middle">force</text>
+  <text class="io" x="70" y="180" text-anchor="middle">&#916;x</text>
+  <text class="note" x="70" y="202" text-anchor="middle">motion</text>
+  <path class="wb" d="M96 173 L188 173"/>
+  <rect class="blk-b" x="190" y="141" width="190" height="64" rx="6"/>
+  <text class="blab" x="285" y="173" text-anchor="middle">Z(s)</text>
+  <text class="note" x="285" y="195" text-anchor="middle">Ms&#178;+Ds+K</text>
+  <path class="wb" d="M380 173 L468 173"/>
+  <text class="io" x="492" y="180" text-anchor="middle">F</text>
+  <text class="note" x="492" y="202" text-anchor="middle">force</text>
 
-  <text class="note" x="281" y="312" text-anchor="middle">Robot renders a force in response to displacement.</text>
-  <text class="note" x="281" y="346" text-anchor="middle">Needs a torque-controlled robot</text>
-  <text class="note" x="281" y="368" text-anchor="middle">(backdrivable, fast inner force loop).</text>
+  <text class="note" x="281" y="268" text-anchor="middle">Robot renders a force from displacement.</text>
+  <text class="note" x="281" y="298" text-anchor="middle">Needs a torque-controlled (backdrivable) robot.</text>
 
   <!-- RIGHT: admittance -->
-  <rect class="panel" x="574" y="56" width="490" height="330" rx="6"/>
-  <text class="ttl" x="819" y="96" text-anchor="middle">Admittance control</text>
-  <text class="tagg" x="819" y="122" text-anchor="middle">force in &#8594; motion out</text>
+  <rect class="panel" x="574" y="40" width="490" height="300" rx="6"/>
+  <text class="ttl" x="819" y="78" text-anchor="middle">Admittance control</text>
+  <text class="tagg" x="819" y="104" text-anchor="middle">force in &#8594; motion out</text>
 
-  <text class="io" x="608" y="210" text-anchor="middle">F_ext</text>
-  <text class="note" x="608" y="232" text-anchor="middle">measured</text>
-  <path class="wg" d="M642 200 L726 200"/>
-  <rect class="blk-g" x="728" y="168" width="190" height="64" rx="6"/>
-  <text class="blab" x="823" y="200" text-anchor="middle">Y(s)</text>
-  <text class="note" x="823" y="222" text-anchor="middle">1 / (Ms&#178;+Ds+K)</text>
-  <path class="wg" d="M918 200 L1004 200"/>
-  <text class="io" x="1028" y="210" text-anchor="middle">&#916;x</text>
-  <text class="note" x="1028" y="232" text-anchor="middle">motion</text>
+  <text class="io" x="608" y="180" text-anchor="middle">F_ext</text>
+  <text class="note" x="608" y="202" text-anchor="middle">measured</text>
+  <path class="wg" d="M644 173 L726 173"/>
+  <rect class="blk-g" x="728" y="141" width="190" height="64" rx="6"/>
+  <text class="blab" x="823" y="173" text-anchor="middle">Y(s)</text>
+  <text class="note" x="823" y="195" text-anchor="middle">1 / (Ms&#178;+Ds+K)</text>
+  <path class="wg" d="M918 173 L1004 173"/>
+  <text class="io" x="1028" y="180" text-anchor="middle">&#916;x</text>
+  <text class="note" x="1028" y="202" text-anchor="middle">motion</text>
 
-  <text class="note" x="819" y="312" text-anchor="middle">Robot moves in response to a measured force.</text>
-  <text class="note" x="819" y="346" text-anchor="middle">Needs a position / velocity interface</text>
-  <text class="note" x="819" y="368" text-anchor="middle">(e.g. the Doosan speedl command).</text>
+  <text class="note" x="819" y="268" text-anchor="middle">Robot moves in response to a measured force.</text>
+  <text class="note" x="819" y="298" text-anchor="middle">Needs a position / velocity interface (Doosan speedl).</text>
 
-  <!-- duality link -->
-  <path class="wc" d="M398 246 C 470 300, 630 300, 700 250"/>
-  <path class="wc" d="M700 250 C 630 196, 470 196, 398 250"/>
-  <rect x="438" y="412" width="224" height="34" rx="17" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
-  <text x="550" y="435" text-anchor="middle" style="font:700 16px sans-serif; fill:#b45309;">Y(s) = Z(s)&#8315;&#185; &#8212; same target dynamics</text>
+  <!-- duality banner -->
+  <rect x="300" y="364" width="500" height="44" rx="22" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+  <text x="550" y="392" text-anchor="middle" style="font:700 19px sans-serif; fill:#b45309;">Y(s) = Z(s)&#8315;&#185;  &#8212;  same target dynamics</text>
 </svg>
