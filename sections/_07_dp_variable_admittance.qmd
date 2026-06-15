@@ -144,6 +144,37 @@ This closes the loop with the inference-efficiency part of the lecture. The cont
 
 ---
 
+## DDPM vs DDIM on the Real Robot {.smaller}
+
+*Same policy, same fridge task, same hardware — only the **deployment sampler** changes.*
+
+```{=html}
+<div style="display:flex; gap:56px; justify-content:center; align-items:flex-start; margin-top:6px;">
+  <div style="text-align:center;">
+    <div style="font-weight:700; color:#dc2626; margin-bottom:6px;">DDPM &middot; ~100 steps</div>
+    <video data-autoplay loop muted playsinline controls style="height:560px; border-radius:10px; box-shadow:0 4px 14px rgba(0,0,0,.18);">
+      <source src="assets/videos/ddpm_fridge.mp4" type="video/mp4">
+    </video>
+    <div style="color:#637083; margin-top:8px;">too slow for the loop &rarr; <strong>hesitant, stop-and-go</strong> &middot; ~40&nbsp;s</div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-weight:700; color:#16a34a; margin-bottom:6px;">DDIM &middot; ~10 steps</div>
+    <video data-autoplay loop muted playsinline controls style="height:560px; border-radius:10px; box-shadow:0 4px 14px rgba(0,0,0,.18);">
+      <source src="assets/videos/ddim_fridge.mp4" type="video/mp4">
+    </video>
+    <div style="color:#637083; margin-top:8px;">holds ~20&nbsp;Hz &rarr; <strong>smooth, continuous</strong> &middot; ~16&nbsp;s</div>
+  </div>
+</div>
+```
+
+::: {.notes}
+This is the latency-quality trade-off from the previous slide, but now you can see it on the real robot instead of reading it off a table. Both clips run the exact same trained policy on the exact same fridge-opening task; the only thing that changes is the sampler used at deployment. On the left, the full DDPM sampler with around a hundred denoising steps: each policy query is far too slow for the ~50 ms control budget, so the robot stalls between action chunks and the motion is hesitant and stop-and-go — the whole task drags out. On the right, DDIM with about ten steps keeps the loop near 20 Hz, so the motion is smooth and continuous and the task finishes in well under half the time. This is the payoff of the inference-efficiency work made visible: fewer denoising steps is not an abstract speedup, it is the difference between a robot that stutters and one that flows.
+
+TODO: confirm the exact on-robot task times; the ~40 s / ~16 s figures are read off the clip lengths.
+:::
+
+---
+
 ## Collecting Compliant Demonstrations
 
 - Human teleoperates the arm through the **same admittance controller** used at deploy time.
