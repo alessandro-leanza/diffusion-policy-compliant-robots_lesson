@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="520" viewBox="0 0 980 520" role="img" aria-labelledby="title desc">
+  <title id="title">DAgger dataset-aggregation loop</title>
+  <desc id="desc">Train the policy, roll it out to visit its own states, ask the expert to label those states, aggregate into the dataset, and repeat.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="13" markerHeight="13" refX="9" refY="6" orient="auto">
+      <path d="M2,2 L11,6 L2,10 Z" fill="#2563eb"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fbff; }
+      .box { fill: #ffffff; stroke: #d8e2f0; stroke-width: 2; }
+      .blue { fill: #dbeafe; stroke: #2563eb; stroke-width: 2; }
+      .teal { fill: #e0f2fe; stroke: #0891b2; stroke-width: 2; }
+      .amber { fill: #fffbeb; stroke: #f59e0b; stroke-width: 2; }
+      .green { fill: #ecfdf5; stroke: #16a34a; stroke-width: 2; }
+      .flow { stroke: #2563eb; stroke-width: 3.5; fill: none; marker-end: url(#arrow); }
+      .num { font: 800 20px sans-serif; fill: #2563eb; }
+      .label { font: 700 21px sans-serif; fill: #12213f; }
+      .body { font: 500 18px sans-serif; fill: #1f2937; }
+      .mono { font: 700 18px monospace; fill: #12213f; }
+      .small { font: 500 16px sans-serif; fill: #637083; }
+    </style>
+  </defs>
+  <rect class="bg" width="980" height="520"/>
+  <text class="label" x="320" y="40" text-anchor="middle">DAgger — be clever about the state distribution</text>
+
+  <!-- four boxes around a cycle -->
+  <rect class="box blue" x="60"  y="80"  width="260" height="100"/>
+  <text class="num" x="80" y="112">1</text>
+  <text class="label" x="190" y="118" text-anchor="middle">Train policy</text>
+  <text class="mono"  x="190" y="150" text-anchor="middle">π_θ(a|s) on D</text>
+
+  <rect class="box teal" x="60"  y="320" width="260" height="110"/>
+  <text class="num" x="80" y="352">2</text>
+  <text class="label" x="190" y="358" text-anchor="middle">Roll out π_θ</text>
+  <text class="body"  x="190" y="388" text-anchor="middle">visit its own states</text>
+  <text class="mono"  x="190" y="414" text-anchor="middle">D_π = {s₁,…,s_N}</text>
+
+  <rect class="box amber" x="430" y="320" width="270" height="110"/>
+  <text class="num" x="450" y="352">3</text>
+  <text class="label" x="565" y="358" text-anchor="middle">Expert labels</text>
+  <text class="body"  x="565" y="388" text-anchor="middle">a* for each visited s</text>
+  <text class="mono"  x="565" y="414" text-anchor="middle">(s, a*)</text>
+
+  <rect class="box green" x="430" y="80"  width="270" height="100"/>
+  <text class="num" x="450" y="112">4</text>
+  <text class="label" x="565" y="118" text-anchor="middle">Aggregate</text>
+  <text class="mono"  x="565" y="150" text-anchor="middle">D ← D ∪ D_π</text>
+
+  <!-- cycle arrows -->
+  <path class="flow" d="M190 180 L190 318"/>
+  <path class="flow" d="M320 375 L428 375"/>
+  <path class="flow" d="M565 318 L565 182"/>
+  <path class="flow" d="M428 130 L322 130"/>
+
+  <!-- caveats -->
+  <rect class="box" x="740" y="120" width="210" height="300" stroke="#dc2626"/>
+  <text class="label" x="845" y="152" text-anchor="middle" fill="#dc2626">Caveats</text>
+  <text class="small" x="755" y="196">• runs a partially</text>
+  <text class="small" x="767" y="218">trained policy</text>
+  <text class="small" x="755" y="256">• repeatedly queries</text>
+  <text class="small" x="767" y="278">the expert</text>
+  <text class="small" x="755" y="316">• expert labels states</text>
+  <text class="small" x="767" y="338">it never actually</text>
+  <text class="small" x="767" y="360">experienced</text>
+
+  <text class="small" x="320" y="470" text-anchor="middle">Trains on states the policy itself visits → train and deploy distributions match</text>
+</svg>

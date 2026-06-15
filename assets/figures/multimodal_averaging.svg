@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440" role="img" aria-labelledby="title desc">
+  <title id="title">Averaging two valid modes gives an invalid action</title>
+  <desc id="desc">An expert can steer left or right around an obstacle; the mean-squared-error average of the two valid actions drives straight into the obstacle.</desc>
+  <defs>
+    <marker id="ag" markerWidth="13" markerHeight="13" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L11,6 L2,10 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="ar" markerWidth="13" markerHeight="13" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L11,6 L2,10 Z" fill="#dc2626"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fbff; }
+      .obst { fill: #cbd5e1; stroke: #64748b; stroke-width: 2.5; }
+      .valid { stroke: #16a34a; stroke-width: 6; fill: none; marker-end: url(#ag); }
+      .mean { stroke: #dc2626; stroke-width: 6; fill: none; stroke-dasharray: 11 7; marker-end: url(#ar); }
+      .start { fill: #2563eb; }
+      .label { font: 700 22px sans-serif; fill: #12213f; }
+      .green { font: 700 19px sans-serif; fill: #16a34a; }
+      .red { font: 700 19px sans-serif; fill: #dc2626; }
+      .small { font: 500 17px sans-serif; fill: #637083; }
+    </style>
+  </defs>
+  <rect class="bg" width="1000" height="440"/>
+  <text class="label" x="500" y="42" text-anchor="middle">Two valid modes — and their meaningless average</text>
+
+  <!-- obstacle -->
+  <circle class="obst" cx="520" cy="225" r="62"/>
+  <text class="small" x="520" y="232" text-anchor="middle">obstacle</text>
+
+  <!-- start -->
+  <circle class="start" cx="110" cy="225" r="11"/>
+  <text class="small" x="110" y="262" text-anchor="middle">observation</text>
+
+  <!-- valid path over the top -->
+  <path class="valid" d="M122 220 C300 90 700 90 880 200"/>
+  <text class="green" x="430" y="105" text-anchor="middle">steer left  (mode 1)</text>
+
+  <!-- valid path under the bottom -->
+  <path class="valid" d="M122 230 C300 370 700 370 880 250"/>
+  <text class="green" x="430" y="375" text-anchor="middle">steer right  (mode 2)</text>
+
+  <!-- mean action straight into obstacle -->
+  <path class="mean" d="M122 225 L444 225"/>
+  <text class="red" x="250" y="208" text-anchor="middle">MSE mean</text>
+
+  <!-- collision burst -->
+  <g transform="translate(470,225)">
+    <path fill="#f59e0b" stroke="#dc2626" stroke-width="1.5" d="M0,-26 L7,-9 L26,-9 L11,3 L17,22 L0,11 L-17,22 L-11,3 L-26,-9 L-7,-9 Z"/>
+  </g>
+  <text class="red" x="540" y="208" text-anchor="start">collision</text>
+</svg>

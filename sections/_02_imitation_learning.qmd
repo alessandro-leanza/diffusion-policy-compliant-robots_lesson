@@ -110,15 +110,14 @@ This does not mean imitation learning and reinforcement learning are mutually ex
 
 ::: {.two-column-balanced}
 ::: {.compact}
-- During training, the policy sees expert states.
-- During deployment, policy errors can push the robot into unseen states.
-- Small mistakes can compound over time.
+- During training, states come from the **expert** policy.
+- During deployment, states come from the **learned** policy — its own errors push it into unseen states.
+- No demonstrations show how to *recover*, so the next action is even less reliable [@ross2010efficient].
 
 $$
-o_t \sim d^{\pi_E}
-\quad\text{during training, but}\quad
-o_t \sim d^{\pi_\theta}
-\quad\text{during execution.}
+\underbrace{o_t \sim d^{\pi_E}}_{\text{training}}
+\;\neq\;
+\underbrace{o_t \sim d^{\pi_\theta}}_{\text{execution}}
 $$
 :::
 
@@ -139,34 +138,78 @@ There are several ways to address this, such as collecting corrective demonstrat
 
 ---
 
+## Why Errors Compound
+
+::: {.two-column-balanced}
+::: {.compact}
+- On **expert states**, each error is bounded by $\epsilon$ → total error grows **linearly**, $\sim \epsilon\,T$.
+- In **closed loop**, an error shifts the next state, so later errors stack on top → total error grows **quadratically**, $\sim \epsilon\,T^2$.
+- Longer horizons make behavioral cloning disproportionately fragile [@ross2010efficient].
+:::
+
+![](assets/figures/error_compounding.svg){width=100%}
+:::
+
+::: {.equation-card}
+$$
+\underbrace{\mathbb{E}[E] \lesssim \epsilon\,T}_{\text{i.i.d. / supervised}}
+\qquad\text{vs.}\qquad
+\underbrace{\mathbb{E}[E] \lesssim \epsilon\,\big(T + (T{-}1) + \cdots\big) \propto \epsilon\,T^2}_{\text{behavioral cloning, closed loop}}
+$$
+:::
+
+::: {.notes}
+This slide makes the covariate-shift argument quantitative. Suppose the policy makes a per-step mistake with probability at most epsilon. If at every step the agent were placed back on a state from the expert distribution — the i.i.d. supervised-learning assumption — the expected number of mistakes over a horizon of T steps would simply be of order epsilon times T: errors are independent in time.
+
+But a robot runs in closed loop. A mistake at step t changes the state at t+1, which is now off the expert manifold, where the policy is even more likely to err. So a single early mistake can corrupt the entire remainder of the trajectory. Summing T + (T-1) + ... gives an expected error that scales like epsilon times T squared — quadratic in the horizon. This is the classical reduction analysis of Ross and Bagnell.
+
+The practical message: behavioral cloning quality degrades faster than supervised validation loss would suggest, and the longer the task, the worse the gap. This is exactly why the field cares about remedies like DAgger, action chunking, and closed-loop policies.
+:::
+
+---
+
+## Addressing Covariate Shift: DAgger
+
+::: {.two-column-balanced}
+::: {.compact}
+**Key idea:** if we cannot make the policy's state distribution match the expert's, change the *data* to match the policy's [@ross2011dagger].
+
+- Roll out the current policy; record the states it actually visits.
+- Ask the expert for the correct action on **those** states.
+- Aggregate into the dataset and retrain — repeat.
+
+Training and deployment then see the same state distribution.
+:::
+
+![](assets/figures/dagger_loop.svg){width=100%}
+:::
+
+::: {.notes}
+DAgger — Dataset Aggregation — is the canonical remedy for covariate shift. The insight is a change of perspective: instead of hoping the learned policy reproduces the expert's state distribution, we deliberately collect labels on the states the learned policy actually reaches.
+
+The loop is: train the policy on the current dataset; roll it out to gather the states it visits; ask the expert to provide the correct action for each of those states; aggregate the new labelled states into the dataset; and repeat. Over iterations the dataset comes to cover the policy's own induced distribution, so the train/deploy mismatch shrinks.
+
+It is worth being honest about the costs, shown on the right. DAgger runs a partially trained — possibly unsafe — policy on the system; it needs repeated access to an expert; and the expert is asked to label states it never actually experienced, which can be unnatural. On real contact-rich robots these costs are significant, which is part of why we will instead lean on expressive closed-loop policies. Reference: Ross, Gordon, and Bagnell, 2011.
+:::
+
+---
+
 ## Multimodal Actions
 
 ::: {.two-column-balanced}
 ::: {.compact}
-For the same observation, there may be several valid expert actions:
+For the same observation, several expert actions can be valid — steer left **or** right around an obstacle, grasp from either side, push or pull.
 
-- grasp from the left or the right
-- push or pull
-- wait, retreat, or continue contact
+Mean-squared regression collapses the modes to their **average**. If $a^{(1)} \neq a^{(2)}$ are both valid,
 
-Mean-squared behavioral cloning can average modes and produce invalid commands.
+$$
+\bar{a} = \tfrac{1}{2}\big(a^{(1)} + a^{(2)}\big)
+$$
+
+can be physically meaningless — steering straight into the obstacle.
 :::
 
-::: {.equation-card}
-If two actions are valid,
-
-$$
-a^{(1)} \neq a^{(2)},
-$$
-
-the mean action
-
-$$
-\bar{a} = \frac{1}{2}(a^{(1)} + a^{(2)})
-$$
-
-may be physically meaningless.
-:::
+![](assets/figures/multimodal_averaging.svg){width=100%}
 :::
 
 ::: {.notes}
@@ -187,7 +230,8 @@ This point will connect directly to diffusion models, because diffusion gives us
 ::: {.compact}
 - Deterministic policies predict one action.
 - Generative policies model a conditional action distribution.
-- For robotics, we often want distributions over action sequences, not only one-step actions.
+- Classical fixes — Gaussian mixtures $\textstyle\sum_i w_i\,\mathcal{N}(\mu_i,\Sigma_i)$, autoregressive discretization — need a guessed number of modes or careful tuning.
+- For robotics, we often want distributions over action *sequences*, not only one-step actions.
 
 $$
 A_{t:t+H}

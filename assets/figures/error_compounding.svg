@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="520" viewBox="0 0 1000 520" role="img" aria-labelledby="title desc">
+  <title id="title">Linear vs quadratic error growth with horizon</title>
+  <desc id="desc">Supervised i.i.d. error grows linearly with the horizon, while behavioral cloning errors compound in closed loop and grow quadratically.</desc>
+  <defs>
+    <marker id="axhead" markerWidth="11" markerHeight="11" refX="8" refY="5.5" orient="auto">
+      <path d="M2,2 L9,5.5 L2,9 Z" fill="#637083"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fbff; }
+      .axis { stroke: #637083; stroke-width: 2.5; fill: none; marker-end: url(#axhead); }
+      .lin { stroke: #0891b2; stroke-width: 5; fill: none; }
+      .quad { stroke: #dc2626; stroke-width: 5; fill: none; }
+      .gap { fill: #fef2f2; opacity: 0.7; }
+      .label { font: 700 23px sans-serif; fill: #12213f; }
+      .body { font: 600 20px sans-serif; fill: #1f2937; }
+      .small { font: 500 17px sans-serif; fill: #637083; }
+      .cyan { fill: #0891b2; }
+      .red { fill: #dc2626; }
+    </style>
+  </defs>
+  <rect class="bg" width="1000" height="520"/>
+  <text class="label" x="500" y="44" text-anchor="middle">Why closed-loop errors are worse than supervised error</text>
+
+  <!-- axes -->
+  <path class="axis" d="M120 450 L930 450"/>
+  <path class="axis" d="M120 450 L120 70"/>
+  <text class="body" x="915" y="485" text-anchor="end">horizon T (steps)</text>
+  <text class="body" x="104" y="80" text-anchor="end" transform="rotate(-90 104 80)">expected total error</text>
+
+  <!-- region between curves -->
+  <path class="gap" d="M120 450 Q610 432 815 95 L815 95 Q500 300 120 450 Z"/>
+
+  <!-- quadratic curve (compounding) -->
+  <path class="quad" d="M120 450 Q620 432 815 95"/>
+  <!-- linear curve (supervised) -->
+  <path class="lin" d="M120 450 L865 300"/>
+
+  <circle class="red" cx="815" cy="95" r="7"/>
+  <circle class="cyan" cx="865" cy="300" r="7"/>
+
+  <text class="body" x="540" y="150" text-anchor="middle" fill="#dc2626">behavioral cloning</text>
+  <text class="small" x="540" y="176" text-anchor="middle">closed loop · errors compound</text>
+  <text class="label" x="540" y="210" text-anchor="middle" fill="#dc2626">∝ ε · T²</text>
+
+  <text class="body" x="775" y="350" text-anchor="middle" fill="#0891b2">supervised / i.i.d. states</text>
+  <text class="label" x="775" y="383" text-anchor="middle" fill="#0891b2">∝ ε · T</text>
+
+  <text class="small" x="320" y="430" text-anchor="middle">per-step error bounded by ε</text>
+</svg>
