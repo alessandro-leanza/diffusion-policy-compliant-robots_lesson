@@ -50,7 +50,7 @@ One useful warning here is that $o_t$ is not necessarily the true state of the w
 ::: {.compact}
 - Treat expert actions as supervised learning targets.
 - Fit the policy on samples from the demonstration dataset.
-- Simple, scalable, and often the first baseline to try.
+- Simple and scalable; used since ALVINN, the first end-to-end neural driving policy [@pomerleau1988alvinn].
 
 $$
 \mathcal{L}_{BC}(\theta)
@@ -144,7 +144,7 @@ There are several ways to address this, such as collecting corrective demonstrat
 ::: {.compact}
 - On **expert states**, each error is bounded by $\epsilon$ → total error grows **linearly**, $\sim \epsilon\,T$.
 - In **closed loop**, an error shifts the next state, so later errors stack on top → total error grows **quadratically**, $\sim \epsilon\,T^2$.
-- Longer horizons make behavioral cloning disproportionately fragile [@ross2010efficient].
+- Longer horizons make behavioral cloning disproportionately fragile [@ross2010efficient; @bacciu_il_lecture].
 :::
 
 ![](assets/figures/error_compounding.svg){width=100%}
@@ -230,7 +230,7 @@ This point will connect directly to diffusion models, because diffusion gives us
 ::: {.compact}
 - Deterministic policies predict one action.
 - Generative policies model a conditional action distribution.
-- Classical fixes — Gaussian mixtures $\textstyle\sum_i w_i\,\mathcal{N}(\mu_i,\Sigma_i)$, autoregressive discretization — need a guessed number of modes or careful tuning.
+- Classical fixes — Gaussian mixtures $\textstyle\sum_i w_i\,\mathcal{N}(\mu_i,\Sigma_i)$ [@bishop1994mdn], autoregressive discretization — need a guessed number of modes or careful tuning.
 - For robotics, we often want distributions over action *sequences*, not only one-step actions.
 
 $$
