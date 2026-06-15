@@ -20,13 +20,13 @@ The object is represented as a tensor and modeled as a sample from a data distri
 :::
 
 ::: {.notes}
-Main point: start from the generality of the diffusion recipe before specializing to actions.
+Diffusion starts as a general recipe before we specialize it to robot actions.
 
-The useful insight from Vincenzo's lecture material is that diffusion operates on tensors. An image, a video, and a robot trajectory have different structure, but in each case we can represent the object as a point in a high-dimensional space.
+The useful insight from Vincenzo's lecture material is that diffusion operates on tensors. An image, a video, and a robot trajectory have different structure, but in each case we can represent the object as a point in a high-dimensional space. The next slide makes those concrete tensor shapes explicit.
 
 For robotics, this matters because the model can generate not only pixels, but also vectors of joint commands, end-effector poses, target displacements, or controller parameters. The neural architecture changes with the structure of the tensor, but the noising and denoising idea remains the same.
 
-Warning: this does not mean the semantics are irrelevant for the whole system. Semantics enter through the architecture, the conditioning information, the dataset, and the controller that executes the output.
+This does not mean the semantics are irrelevant for the whole system. Semantics enter through the architecture, the conditioning information, the dataset, and the controller that executes the output.
 :::
 
 ---
@@ -40,11 +40,49 @@ The same generative objective can be applied to images, videos, and robot trajec
 :::
 
 ::: {.notes}
-Main point: make the tensor abstraction concrete before introducing the diffusion equations.
+Diffusion models operate on tensors, and this visual makes that statement less abstract. An image has height, width, and color channels; a video adds a time axis; a robot trajectory adds a sequence axis and action or configuration dimensions.
 
-The slide before this one gives the abstract statement: diffusion models operate on tensors. This visual makes the statement less abstract. An image has height, width, and color channels; a video adds a time axis; a robot trajectory adds a sequence axis and action or configuration dimensions.
+From here, the bridge from image diffusion to policy diffusion is straightforward. We are going to reuse the same noising and denoising machinery, but the object being generated will become an action chunk rather than an image.
+:::
 
-For the rest of the lecture, this is the bridge from image diffusion to policy diffusion. We are going to reuse the same noising and denoising machinery, but the object being generated will become an action chunk rather than an image.
+---
+
+## Normalization Before Diffusion
+
+Diffusion works best when every channel lives on a comparable numerical scale:
+
+::: {.equation-card}
+$$
+\tilde{x}
+=
+\frac{x-\mu_x}{\sigma_x},
+\qquad
+x
+=
+\sigma_x\tilde{x}+\mu_x
+$$
+:::
+
+::: {.two-column-balanced}
+::: {.compact}
+- $\mu_x$, $\sigma_x$: dataset statistics
+- $\tilde{x}$: normalized tensor used by the model
+- denormalization restores physical units after sampling
+:::
+
+::: {}
+![](assets/figures/normalization_roundtrip.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+Normalization is part of the diffusion problem, not a cosmetic preprocessing step.
+
+The forward process adds standard Gaussian noise. Standard Gaussian means zero mean and unit variance in each dimension. If one channel of the data has values around one thousand and another channel has values around zero point one, the same Gaussian noise does not have the same meaning in the two channels. The large-scale channel may barely be perturbed, while the small-scale channel may be overwhelmed. That makes the denoising task badly conditioned.
+
+In the formula, $x$ is a raw data tensor: it can be an image tensor, a state vector, an action trajectory, or a controller-parameter vector. $\mu_x$ is the empirical mean computed from the training dataset, and $\sigma_x$ is the empirical standard deviation. The normalized value $\tilde{x}$ is what the diffusion model actually sees. After sampling, the inverse map $x=\sigma_x\tilde{x}+\mu_x$ converts the normalized sample back to the original units.
+
+For images, this may mean mapping pixel intensities to a standard range. For robot policies, it is more delicate because actions may be measured in meters, radians, velocities, or controller gains. A diffusion policy trained on normalized actions outputs normalized actions, so deployment must denormalize them before sending anything to the robot — a deployment detail we return to in the Diffusion Policy section.
 :::
 
 ---
@@ -68,7 +106,7 @@ Diffusion replaces direct sampling from $p_{\text{data}}$ with an easier path:
 :::
 
 ::: {.notes}
-Main point: formalize generation as sampling from the data distribution.
+In $x_0 \sim p_{\text{data}}(x)$, $x_0$ is a clean data sample: for images, a real image; for this lecture, eventually an expert action chunk. $p_{\text{data}}$ is the unknown real distribution that produced the dataset. The symbol $\sim$ means "is sampled from." We cannot write down $p_{\text{data}}$ analytically; we only have examples. A generative model is useful because it learns a procedure that can produce new samples that look like they came from this same distribution.
 
 We do not know the true distribution of demonstrations, images, or action chunks. We only have samples. A diffusion model learns a reverse process that starts from a distribution we can sample easily, usually a standard Gaussian, and gradually moves toward the data distribution.
 
@@ -114,11 +152,13 @@ In Diffusion Policy, the same picture applies in **action-chunk space** instead 
 :::
 
 ::: {.notes}
-Main point: separate the fixed corruption process from the learned denoising process, and make the direction of the two processes visually obvious.
-
 The forward process is not learned. We choose a schedule of noise variances and progressively corrupt the data. The reverse process is learned because the true reverse conditional depends on the unknown data distribution.
 
-I use $k$ for diffusion time. This is not robot time. Robot time indexes physical execution, while diffusion time indexes the artificial denoising loop used by the generative model. For image diffusion, we can see the corruption directly. For robot actions, the samples are vectors or trajectories, so the visual intuition is less obvious, but the math is the same: a clean expert action chunk is corrupted during training, and the model learns how to remove the artificial noise.
+For the forward formula, $q$ denotes the fixed noising process. $x_{k-1}$ is the sample at the previous diffusion step, and $x_k$ is the next, noisier sample. $\mathcal{N}(\cdot;\mu,\Sigma)$ is a Gaussian distribution with mean $\mu$ and covariance $\Sigma$. The mean is $\sqrt{1-\beta_k}x_{k-1}$, so the old sample is slightly shrunk toward zero. The covariance is $\beta_k I$, so we add isotropic Gaussian noise with variance $\beta_k$ in every dimension. $I$ is the identity matrix. $\beta_k$ is chosen by a noise schedule: small at early steps, larger as we approach pure noise.
+
+For the reverse formula, $p_\theta(x_{k-1}\mid x_k,c)$ is the learned denoising transition. $\theta$ are the neural-network parameters, and $c$ is optional conditioning information. In an unconditional image model, $c$ might be absent. In a robot policy, $c$ will be the observation history, such as images, proprioception, force, or task information.
+
+We use $k$ for diffusion time. This is not robot time. Robot time indexes physical execution, while diffusion time indexes the artificial denoising loop used by the generative model. For image diffusion, we can see the corruption directly. For robot actions, the samples are vectors or trajectories, so the visual intuition is less obvious, but the math is the same: a clean expert action chunk is corrupted during training, and the model learns how to remove the artificial noise.
 :::
 
 ---
@@ -164,11 +204,59 @@ Training does not require simulating all previous noising steps. We can draw $k$
 :::
 
 ::: {.notes}
-Main point: the closed-form forward marginal makes training efficient.
+The closed-form forward marginal makes training efficient.
 
-This is one of the most important practical facts. If we want a noisy sample at diffusion step $k$, we do not have to run the full chain from $0$ to $k$. We sample Gaussian noise once and mix it with the clean sample using $\bar{\alpha}_k$.
+This practical fact matters a lot. If we want a noisy sample at diffusion step $k$, we do not have to run the full chain from $0$ to $k$. We sample Gaussian noise once and mix it with the clean sample using $\bar{\alpha}_k$.
+
+$x_0$ is clean data. $\epsilon$ is freshly sampled standard Gaussian noise with the same shape as $x_0$. $\alpha_k=1-\beta_k$ is the amount of signal retained at step $k$; if $\beta_k$ is the noise variance added at that step, $\alpha_k$ is the complementary signal coefficient. $\bar{\alpha}_k$ is the product of all previous $\alpha_i$ values, so it measures how much of the original clean sample remains after $k$ noising steps. When $k$ is small, $\bar{\alpha}_k$ is close to one and $x_k$ mostly resembles $x_0$. When $k$ is large, $\bar{\alpha}_k$ is close to zero and $x_k$ is mostly noise.
+
+The marginal equation $q(x_k\mid x_0)=\mathcal{N}(\sqrt{\bar{\alpha}_k}x_0,(1-\bar{\alpha}_k)I)$ says the same thing distributionally: conditioned on the clean sample, the noisy sample is Gaussian around a scaled version of $x_0$. The covariance grows as $1-\bar{\alpha}_k$, so uncertainty increases as diffusion time increases.
 
 For action trajectories, $x_0$ is the expert action chunk. We corrupt that chunk and ask the network to predict the noise that was added.
+:::
+
+---
+
+## Reparameterization View
+
+Closed-form noising can be read as a reparameterization:
+
+::: {.equation-card}
+$$
+x_k
+=
+g_k(x_0,\epsilon)
+=
+\sqrt{\bar{\alpha}_k}x_0
++
+\sqrt{1-\bar{\alpha}_k}\epsilon,
+\qquad
+\epsilon\sim\mathcal{N}(0,I)
+$$
+:::
+
+::: {.two-column-balanced}
+::: {.compact}
+Instead of sampling from $q(x_k\mid x_0)$ through a chain, we express $x_k$ as a deterministic function of:
+
+- clean data $x_0$
+- diffusion index $k$
+- standard noise $\epsilon$
+:::
+
+::: {}
+![](assets/figures/reparameterization_noising.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+The trick hidden inside the previous formula has a specific name: reparameterization.
+
+The distribution $q(x_k\mid x_0)$ is random because it includes Gaussian noise. Reparameterization means that we separate the source of randomness from the transformation. First we draw a simple random variable, $\epsilon\sim\mathcal{N}(0,I)$. Then, once $x_0$, $k$, and $\epsilon$ are fixed, the noisy sample $x_k$ is obtained by a deterministic formula. The function $g_k$ is just a compact way to name that deterministic mixing operation.
+
+This is similar in spirit to the reparameterization trick used in variational autoencoders: sampling from a complicated-looking Gaussian can be written as mean plus scale times standard noise. Here the mean is $\sqrt{\bar{\alpha}_k}x_0$ and the standard deviation is $\sqrt{1-\bar{\alpha}_k}$. The one-step training efficiency was the point of the previous slide; the emphasis here is different — the *separation* of the random source $\epsilon$ from the deterministic transformation $g_k$, which is what makes the gradient flow cleanly through $x_k$.
+
+In Diffusion Policy, the same reparameterization is applied to action chunks. The clean object $x_0$ becomes an expert action sequence, and $\epsilon$ is an artificial noise tensor with the same shape as that sequence.
 :::
 
 ---
@@ -204,7 +292,9 @@ The model is not trained to "undo robot noise." The noise is a learning construc
 :::
 
 ::: {.notes}
-Main point: the model learns to estimate the noise component added during the forward process.
+The model learns to estimate the noise component that was added during the forward process.
+
+In the loss, $\mathcal{L}_{diff}(\theta)$ is the diffusion training objective. The expectation averages over clean training samples $x_0$, random noise samples $\epsilon$, and randomly chosen diffusion steps $k$. $\epsilon_\theta(x_k,k,c)$ is the neural network's prediction of the noise that was added to obtain $x_k$. The norm $\lVert \epsilon-\epsilon_\theta(\cdot)\rVert^2$ is a squared error between true injected noise and predicted noise. The target is known during training because we created the noisy sample ourselves.
 
 Once the model can estimate the noise in $x_k$, we can use that estimate to move the sample toward a cleaner point. The same loss is used whether $x$ is an image tensor or an action trajectory tensor.
 
@@ -232,9 +322,9 @@ $$
 :::
 
 ::: {.notes}
-Main point: connect the loss to a concrete neural-network computation.
-
 The denoiser is not a generic image classifier. It is trained to answer a very specific question: given this noisy sample, at this diffusion step, and under this conditioning context, what noise was added?
+
+The diffusion step $k$ must be given to the network because the same noisy-looking value has different meanings at different noise levels. At high noise, the network should make a coarse global guess; at low noise, it should make a fine correction. In practice $k$ is usually embedded into a vector, similar to a positional or time embedding, and injected into the network layers.
 
 At inference time, the answer is used to update the sample toward a cleaner one. In Diffusion Policy, the same denoiser operates on action trajectories rather than pixels, and the conditioning is the robot observation history.
 :::
@@ -285,11 +375,11 @@ At generation time $x_0$ is exactly what we are trying to produce. So we train a
 :::
 
 ::: {.notes}
-Main point: motivate why a neural network is needed at all, instead of just inverting the forward process analytically.
-
-This is the rigorous backbone behind the noise-prediction loss. It can be delivered quickly or treated as optional depending on the audience, but it answers the natural question "why not just reverse the Gaussian?".
+The noise-prediction loss has a rigorous probabilistic backbone. It answers the natural question "why not just reverse the Gaussian?".
 
 The true single-step reverse conditional is intractable because, through Bayes' rule, it depends on the marginal $q(x_k)$, which in turn depends on the unknown $q(x_0)$. The key trick from the DDPM derivation is that, once we additionally condition on the clean sample $x_0$, the reverse conditional becomes a closed-form Gaussian whose mean $\tilde{\mu}_k$ and variance $\tilde{\beta}_k$ are known functions of the noise schedule.
+
+$q(x_{k-1}\mid x_k)$ is the ideal reverse step: from a noisy point, sample a slightly cleaner point. Bayes' rule writes it using $q(x_k\mid x_{k-1})$, which we know, and two marginals, $q(x_{k-1})$ and $q(x_k)$, which require knowing the whole data distribution. The conditioned posterior $q(x_{k-1}\mid x_k,x_0)$ is different: it asks, if we also know the original clean sample, what was the previous noisy state likely to be? That becomes Gaussian. $\tilde{\mu}_k$ is its mean; $\tilde{\beta}_k I$ is its covariance; the tilde indicates these are posterior quantities derived from the forward process.
 
 The mean $\tilde{\mu}_k$ is exactly the quantity the model will learn to match. Notation follows our diffusion-time index $k$; the derivation is adapted from Vincenzo Pomponi's lecture material [@pomponi2026chaos2clarity] and the original DDPM paper [@ho2020ddpm].
 :::
@@ -333,11 +423,13 @@ Each Gaussian KL reduces to $\frac{1}{2\tilde{\beta}_k}\lVert\tilde{\mu}_k - \mu
 :::
 
 ::: {.notes}
-Main point: close the loop between the probabilistic derivation and the simple squared-error loss introduced earlier.
-
 The full ELBO is the same object that appears in variational autoencoders. The important conceptual steps are: (1) we cannot maximize the true log-likelihood, (2) we maximize a lower bound instead, (3) the bound becomes a sum of KL divergences between Gaussians, which are available in closed form, and (4) matching the means is equivalent, up to a per-step weight, to predicting the injected noise.
 
-In practice the weighting is dropped and the constant terms are ignored, which is exactly the $\lVert\epsilon - \epsilon_\theta\rVert^2$ objective from the previous slide. This is why noise prediction is not an arbitrary heuristic: it is the simplified ELBO [@ho2020ddpm]. Derivation adapted from [@pomponi2026chaos2clarity].
+$\log p_\theta(x_0)$ is the log-likelihood that the model assigns to a clean training sample. $x_{0:K}$ means the whole diffusion trajectory from clean data to noise. $q(x_{1:K}\mid x_0)$ is the known forward noising trajectory. $p_\theta(x_{0:K})$ is the learned reverse generative trajectory. $D_{\mathrm{KL}}(q\|p)$ measures how different two probability distributions are; it is zero only when they match exactly. The reconstruction term handles the final step from $x_1$ to $x_0$; the sum of KL terms asks each learned reverse transition to match the corresponding tractable Gaussian posterior.
+
+The goal is not to derive every algebraic line. It is to show why the simple squared noise-prediction objective has a probabilistic justification. The neural network is not merely trained to denoise because that sounds plausible; the DDPM derivation turns likelihood learning into a sequence of Gaussian matching problems.
+
+In practice the weighting is dropped and the constant terms are ignored, which is exactly the $\lVert\epsilon - \epsilon_\theta\rVert^2$ objective from the diffusion sampling discussion. Noise prediction is therefore not an arbitrary heuristic: it is the simplified ELBO [@ho2020ddpm]. Derivation adapted from [@pomponi2026chaos2clarity].
 :::
 
 ---
@@ -361,11 +453,11 @@ For Diffusion Policy, the key transition is from spatial denoising to sequence d
 :::
 
 ::: {.notes}
-Main point: motivate the 1D U-Net used later in Diffusion Policy.
-
 The diffusion objective only says that the network receives a noisy sample and a diffusion step, then predicts noise of the same shape. It does not prescribe the architecture.
 
 The architecture should match the structure of the data. Images have local spatial structure, so a 2D U-Net is natural. Action trajectories have temporal structure, so a 1D U-Net with convolutions along the horizon is natural. Transformers can be useful when longer-range interactions dominate, but they usually require more data and compute.
+
+A CNN, or convolutional neural network, applies small learned filters repeatedly across space or time. The same filter is reused at many locations, which makes CNNs good for local patterns such as edges in images or local temporal motifs in action sequences. A U-Net is a CNN-style encoder-decoder: the encoder compresses the input into coarser features, the decoder expands it back to the original resolution, and skip connections pass fine details from encoder to decoder. "2D U-Net" means convolutions over image height and width. "1D U-Net" means convolutions over a sequence axis, here the action horizon. A Transformer is different: it uses attention, where each token can directly weight and combine information from other tokens. This is powerful for long-range dependencies, but the attention computation and data requirements can be heavier than a small convolutional model.
 :::
 
 ---
@@ -387,9 +479,9 @@ $$
 - Robot policies must respect a control-loop timing budget.
 
 ::: {.notes}
-Main point: introduce the computational bottleneck before discussing DDPM and DDIM.
+Diffusion models differ from a standard feed-forward policy at sampling time. A deterministic policy typically performs one forward pass per control query. A diffusion policy may require tens or hundreds of denoising passes to produce one action chunk.
 
-This is where diffusion models become different from a standard feed-forward policy. A deterministic policy typically performs one forward pass per control query. A diffusion policy may require tens or hundreds of denoising passes to produce one action chunk.
+In $x_K\sim\mathcal{N}(0,I)$, the sampler begins from pure Gaussian noise. The chain $x_K\rightarrow x_{K-1}\rightarrow\cdots\rightarrow x_0$ means each step should reduce the noise level. $K$ is the number of diffusion steps used by the sampler, not the robot control horizon. Each arrow usually means one neural-network call, so the computational cost scales with the number of arrows.
 
 For offline image generation, this may be acceptable. For robot control, latency and jitter affect closed-loop behavior, tracking error, and contact response.
 :::
@@ -428,9 +520,9 @@ $$
 :::
 
 ::: {.notes}
-Main point: make the abstract reverse loop concrete as the original DDPM ancestral sampler.
+The sampler uses the same $\mu_\theta$ that the ELBO told us to match. The sampler simply plugs the network's noise prediction into the closed-form reverse mean and then adds calibrated Gaussian noise with variance $\tilde{\beta}_k$.
 
-This is the same $\mu_\theta$ that the ELBO told us to match. The sampler simply plugs the network's noise prediction into the closed-form reverse mean and then adds calibrated Gaussian noise with variance $\tilde{\beta}_k$.
+In the DDPM update, $\mu_\theta(x_k,k)$ is the model's estimate of the mean of the cleaner sample distribution. It is computed from the current noisy sample $x_k$, the diffusion step $k$, and the predicted noise $\epsilon_\theta(x_k,k,c)$. The vector $z$ is fresh standard Gaussian noise. The multiplier $\sqrt{\tilde{\beta}_k}$ sets the scale of that random noise. If $\tilde{\beta}_k$ is large, the step is more stochastic; if it is small, the step is closer to deterministic denoising.
 
 The flowchart on the right is the full algorithm: sample noise, loop $k = K \ldots 1$ predicting noise, computing the mean, and sampling the next state, then return $x_0$. The stochastic term is why DDPM usually needs many steps to produce clean samples [@ho2020ddpm].
 :::
@@ -471,9 +563,11 @@ $\sigma_k$ is a free knob. With $\sigma_k = 0$ sampling is **deterministic** and
 :::
 
 ::: {.notes}
-Main point: DDIM is a different sampler, not a different model — no retraining is needed.
+DDIM is a different sampler, not a different model, so no retraining is needed.
 
 The first equation is exactly the $\hat{x}_0$ readout implied by the closed-form forward process. The second equation reconstructs $x_{k-1}$ from this estimate plus a controllable amount of injected noise.
+
+Here $\hat{x}_0$ means "the model's current estimate of the clean sample." It is not guaranteed to equal the true training sample; at inference time there is no true sample. The formula says: take the current noisy sample $x_k$, subtract the predicted noise component, and rescale by the remaining signal coefficient. The second equation then combines three parts: the estimated clean sample, the predicted noise direction needed to land at the next noise level, and an optional random term $\sigma_k z$.
 
 When $\sigma_k = 0$ the whole trajectory is determined by the initial noise and the network outputs, so we can take large steps and still land on a coherent sample. This is the main reason DDIM-style samplers appear in real-time diffusion policies, where each denoising step costs one network evaluation [@song2021ddim].
 :::

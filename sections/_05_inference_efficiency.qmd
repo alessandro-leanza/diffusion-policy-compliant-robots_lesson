@@ -16,9 +16,11 @@
 :::
 
 ::: {.notes}
-Main point: latency is a control issue, not only a software performance metric.
+Latency is a control issue, not only a software performance metric.
 
 If a robot reacts late, the physical situation may already have changed. This is especially true around contact, where small delays can create large force errors or make the robot continue pushing after it should have adapted.
+
+" Latency is the time between sensing the world and applying the corresponding action. Jitter is variation in that time from one cycle to the next. A controller can sometimes tolerate a fixed delay if it is modeled, but unpredictable jitter is harder because the robot does not know how old the action really is. In contact tasks, both matter because the environment can change forces faster than a slow policy can react.
 
 For diffusion policies, the denoising loop is often the dominant cost. But the total query time also includes sensing, observation encoding, communication, synchronization, and low-level execution.
 :::
@@ -52,9 +54,11 @@ T_{comm}
 $$
 
 ::: {.notes}
-Main point: the number of denoising steps multiplies the neural network cost.
+The number of denoising steps multiplies the neural network cost.
 
 This simple equation is useful for intuition. If one denoising pass takes 4 ms, then 50 steps already cost about 200 ms before sensing and communication. That may be acceptable for slow tabletop behavior, but not for fast contact correction.
+
+$T_{infer}$ is the inference time spent inside the diffusion sampler. $K$ is the number of denoising steps actually used at deployment. $T_{net}$ is the wall-clock time for one denoising network evaluation. The more complete $T_{query}$ includes $T_{sense}$ for acquiring sensor data, $T_{enc}$ for encoding observations such as images, $KT_{net}$ for repeated denoising, and $T_{comm}$ for sending commands and synchronizing with the robot middleware. The approximation sign means the exact timing also depends on batching, memory transfers, and implementation overhead.
 
 The approximation hides implementation details. GPU synchronization, batch size, camera pipelines, and CPU-GPU transfer can dominate in practice. Still, $K$ is the first design knob to inspect.
 :::
@@ -97,9 +101,11 @@ A sampler that is excellent for offline generation can be too slow for online co
 :::
 
 ::: {.notes}
-Main point: DDPM is the baseline sampler but is often expensive.
+DDPM is the baseline sampler, but it is often expensive.
 
 The stochastic term is part of the reverse process. In robot action space, stochastic sampling is not automatically bad, because multimodality can be useful. But uncontrolled variability and long inference time are both deployment concerns.
+
+In the formula, $x_k$ is the current noisy sample, $x_{k-1}$ is the next cleaner sample, $\mu_\theta(x_k,k)$ is the learned reverse mean, $z$ is standard Gaussian noise, and $\sigma_k$ controls the amount of random noise added at that step. In an image model, that randomness may create diverse images. In a robot policy, randomness can create diverse action chunks, but it must be controlled because the robot executes the sample physically.
 
 For a lecture, DDPM is the clean starting point. For a robot, we usually ask how many steps are really necessary.
 :::
@@ -124,11 +130,53 @@ DDIM uses a non-Markovian reverse trajectory and can skip diffusion timesteps:
 :::
 
 ::: {.notes}
-Main point: DDIM is a practical acceleration path.
+DDIM is a practical acceleration path.
 
 The key idea is that we do not necessarily need to traverse every reverse step. DDIM defines a trajectory through a subset of timesteps. With zero stochasticity, the sample is determined by the initial noise and network predictions.
 
+Non-Markovian here means the reverse trajectory is not constrained to use the exact same one-step stochastic transitions as DDPM. DDIM reuses the trained noise predictor but changes how samples move between noise levels. "Skip timesteps" means we might go from diffusion index 100 to 90 to 80 rather than 100, 99, 98, and so on. Each skipped step saves one neural-network evaluation.
+
 In the PushT notebook, the contrast is educational: a DDPM sampler may use around 100 steps, while a DDIM sampler can demonstrate a much smaller number such as 10 steps. The exact number is a design and validation choice, not a universal constant.
+:::
+
+---
+
+## Same Network, Different Sampler
+
+The trained denoiser is reused:
+
+::: {.equation-card}
+$$
+\epsilon_\theta(x_k,k,c)
+\quad
+\text{is unchanged}
+$$
+:::
+
+::: {.two-column-balanced}
+::: {.compact}
+What changes at deployment is the update rule:
+
+- DDPM: many stochastic transitions
+- DDIM: fewer, often deterministic jumps
+- both operate in the same normalized action space
+:::
+
+::: {}
+![](assets/figures/same_network_different_sampler.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+DDPM and DDIM should not be understood as two separately trained policies.
+
+The neural network is the same denoiser $\epsilon_\theta(x_k,k,c)$. It receives the current noisy sample $x_k$, the diffusion index $k$, and the conditioning information $c$, and it predicts the noise component. That learned function does not change when we switch from DDPM sampling to DDIM sampling.
+
+What changes is the sampler, meaning the numerical rule that uses the predicted noise to move from one diffusion level to the next. DDPM follows many small stochastic transitions. Each transition includes a calibrated random term, so the trajectory through diffusion time is noisy. DDIM rewrites the trajectory so that we can skip timesteps. When the DDIM stochasticity parameter is set to zero, the trajectory is deterministic given the initial noise and the network outputs.
+
+For robot control, this distinction is practical. If a policy was trained with a DDPM-style noise-prediction objective, we can often deploy it with a faster DDIM sampler without retraining the network. That is attractive because retraining can be expensive, while changing the sampler is an inference-time design choice.
+
+The caveat is that "same network" does not mean "same behavior." Fewer steps may change task success, smoothness, multimodality, and stability. The sampler is therefore a control-design parameter, not just a software speed setting.
 :::
 
 ---
@@ -153,9 +201,11 @@ The right sampler is task- and hardware-dependent.
 :::
 
 ::: {.notes}
-Main point: fewer steps are not automatically better.
+Fewer steps are not automatically better.
 
 For image generation, we may judge the output visually. For robot policies, we must test closed-loop behavior. A visually smooth action chunk can still be unsafe or ineffective if it reacts too late, violates force constraints, or creates unstable contact.
+
+Reducing $K$ means the sampler has fewer chances to correct its initial random action chunk. This may leave residual noise, produce less smooth actions, or push the sample toward a lower-quality part of the learned distribution. But increasing $K$ also delays the command. In closed-loop control, a slightly lower-quality action that arrives on time can outperform a higher-quality action that arrives too late. Stability here means the coupled robot-controller-environment behavior remains bounded and predictable, not merely that the neural network output looks smooth.
 
 The design target is not maximum generative quality in isolation. The target is enough action quality inside the timing and safety constraints of the robot.
 :::
@@ -183,7 +233,9 @@ Tradeoff:
 - larger $H$: more temporal context, harder sequence modeling
 
 ::: {.notes}
-Main point: inference efficiency is also controlled by execution horizon and replanning frequency.
+Inference efficiency is also controlled by execution horizon and replanning frequency.
+
+"Query once" means running the full diffusion sampler once to produce an action chunk. $h$ is the execution horizon: the number of actions from that chunk that are actually sent to the robot before the next query. $H$ is the prediction horizon: the full length of the chunk sampled by the policy. If $h$ is small, the robot uses fresh observations often, which improves reactivity but increases compute demand. If $h$ is large, the same sampled plan is reused longer, which saves compute but risks following stale commands after contact changes.
 
 If sampling is expensive, we can execute more actions per query. This amortizes inference cost, but it also means the robot follows an older plan for longer. In contact, this can be risky.
 
@@ -207,9 +259,11 @@ Acceleration is useful only if the closed-loop robot behavior remains stable, re
 :::
 
 ::: {.notes}
-Main point: give a broader menu of acceleration strategies.
+Sampler changes are only one part of the acceleration story.
 
 Reducing the number of denoising steps is the most direct approach, but it is not the only one. We can also simplify the network, reduce the action representation, distill a multi-step sampler into a faster policy, or optimize deployment.
+
+A smaller 1D U-Net has fewer channels, layers, or residual blocks, so each denoising step is cheaper. A lower-dimensional action parameterization predicts fewer numbers, for example end-effector deltas instead of full joint trajectories. Policy distillation trains a faster student model to imitate the outputs of a slower diffusion teacher. Consistency-style or few-step samplers try to learn larger denoising jumps. Hardware-aware deployment includes compilation, avoiding CPU-GPU synchronization stalls, using the right batch shape, and keeping camera or middleware callbacks from blocking inference.
 
 The evaluation criterion must remain closed-loop robot behavior. Offline denoising loss and sample appearance are not enough.
 :::
@@ -241,9 +295,11 @@ $$
 :::
 
 ::: {.notes}
-Main point: transition from inference efficiency to compliant control.
+The natural next step is compliant control.
 
 If the diffusion policy cannot run at the same rate as the low-level control loop, we should not force it to be the only control mechanism. A more realistic architecture is hierarchical: the diffusion policy proposes a motion or action chunk, and a faster compliant controller handles immediate physical interaction.
 
-This motivates the next section. For compliant robots, the action may be more than a target position. It can also include stiffness, damping, or admittance parameters that determine how the robot physically responds to contact.
+"Diffusion policy" is the slow deliberative layer. "Reference motion" is the target pose, velocity, displacement, or action chunk that the policy outputs. "Compliant controller" is the fast layer that converts the reference into robot commands while reacting to measured force. The arrow is not just software plumbing: it is the interface contract between learning and control.
+
+For compliant robots, the action may be more than a target position. It can also include stiffness, damping, or admittance parameters that determine how the robot physically responds to contact.
 :::

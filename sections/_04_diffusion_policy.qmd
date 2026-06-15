@@ -23,13 +23,55 @@ c = \mathbf{o}_{t-T_o:t}
 $$
 
 ::: {.notes}
-Main point: Diffusion Policy models a conditional distribution over action chunks.
+Diffusion Policy models a conditional distribution over action chunks.
 
 This is the main conceptual shift from standard behavioral cloning. Instead of predicting one action from one observation, the policy samples a sequence of future actions conditioned on an observation history.
 
+In the formula, $\mathbf{A}_{t:t+H}$ is the action chunk from robot time $t$ to $t+H$. Boldface reminds us this is not a scalar; it is an array. $H$ is the prediction horizon in robot timesteps. $D_a$ is the action dimension, so $\mathbf{A}_{t:t+H}\in\mathbb{R}^{H\times D_a}$ means a table with one row per future time and one column per action component. $\mathbf{o}_{t-T_o:t}$ is the observation history from $t-T_o$ to the current time $t$, where $T_o$ is the observation window length. $p_\theta(\cdot\mid\cdot)$ is the conditional distribution learned by the diffusion policy.
+
 The action chunk can encode approach, contact, recovery, and short-term temporal consistency. The conditioning keeps the sample tied to the current scene and robot state.
 
-Warning: the prediction horizon $H$ is not the diffusion denoising horizon $K$. $H$ lives in robot time; $K$ lives in diffusion sampling time.
+It is important not to confuse the prediction horizon $H$ with the diffusion denoising horizon $K$. $H$ lives in robot time; $K$ lives in diffusion sampling time.
+:::
+
+---
+
+## From Demonstrations to Training Windows
+
+A long demonstration is converted into many supervised training pairs:
+
+::: {.equation-card}
+$$
+\left(
+\mathbf{o}_{t-T_o+1:t},
+\mathbf{A}_{t:t+H-1}
+\right)
+$$
+:::
+
+::: {.two-column-balanced}
+::: {.compact}
+- observation window: recent context
+- action chunk: expert future behavior
+- slide the window through each episode
+- do not cross episode boundaries
+:::
+
+::: {}
+![](assets/figures/demonstration_windows.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+Diffusion Policy is trained from windows cut out of expert demonstrations.
+
+An expert demonstration is usually a full episode: the robot starts from an initial state, acts for many timesteps, and eventually succeeds or fails. The policy does not train on the whole episode as one enormous object. Instead, we slide a local window through the episode and create many smaller supervised examples.
+
+The input part is the observation history $\mathbf{o}_{t-T_o+1:t}$. This means the policy sees the most recent $T_o$ observations, ending at the current robot time $t$. The target part is the future expert action chunk $\mathbf{A}_{t:t+H-1}$, which contains $H$ actions starting from the same time $t$. The notation $\left(\mathbf{o}_{t-T_o+1:t},\mathbf{A}_{t:t+H-1}\right)$ therefore names one training pair.
+
+This windowing step matters because it defines what the policy is allowed to know and what it is asked to predict. If $T_o$ is too short, the policy may miss velocity, contact history, or task phase. If $H$ is too short, the action chunk has little temporal structure. If $H$ is too long, the model must predict too far into an uncertain future.
+
+Episode boundaries are important. A window should not take observations from the end of one rollout and actions from the beginning of another. That would create an impossible training pair with a fake discontinuity. In code, this is why datasets keep episode start and end indices rather than treating the whole file as one continuous trajectory.
 :::
 
 ---
@@ -56,9 +98,11 @@ $$
 :::
 
 ::: {.notes}
-Main point: action chunks give the policy temporal structure beyond one-step regression.
+Action chunks give the policy temporal structure beyond one-step regression.
 
 In contact-rich manipulation, the right action often depends on a short sequence: approach, make contact, move along a constraint, recover if contact changes. A one-step policy can still work, but it has less explicit temporal intent.
+
+The bracket notation $\left[a_t,a_{t+1},\ldots,a_{t+H}\right]$ means the chunk is an ordered sequence of individual actions. Each $a_t$ may itself be a vector: for example, an end-effector translation, rotation, gripper command, or compliance parameter. The important point is that the network predicts these actions jointly, so later actions can be consistent with earlier ones.
 
 Diffusion is useful here because it can represent a distribution over entire chunks. If there are multiple valid strategies, sampling can select one coherent trajectory rather than averaging incompatible actions.
 :::
@@ -85,13 +129,53 @@ This is enough to explain the data interface without running the notebook.
 :::
 
 ::: {.notes}
-Main point: ground the abstract notation in a concrete robotics dataset.
-
 The notebook from Vincenzo's repo uses the PushT dataset. The raw state contains agent position and block state. The simplified exercise feature engineering builds an observation from agent position and finite-difference velocity, and defines the action as a delta target: target position minus current agent position.
 
-For the morning lecture, this is useful as a conceptual example. The exercise can later use the notebook directly, but the lecture should not depend on live dataset loading.
+This is useful as a conceptual example because it exposes the data interface without requiring live dataset loading. The exercise can later use the notebook directly.
 
-Warning: this simplified observation omits the block state. It is educational, but for stronger performance one would normally include block pose or visual observations.
+This simplified observation omits the block state. It is educational, but for stronger performance one would normally include block pose or visual observations.
+:::
+
+---
+
+## Delta Actions vs Absolute Targets
+
+The same command can be represented as an absolute target or a relative displacement:
+
+::: {.equation-card}
+$$
+\Delta p_t
+=
+p^{target}_t
+-
+p^{agent}_t
+$$
+:::
+
+::: {.two-column-balanced}
+::: {.compact}
+For PushT-style planar control:
+
+- $p^{agent}_t$: current end-effector or agent position
+- $p^{target}_t$: target position from the demonstration
+- $\Delta p_t$: action in a local frame
+:::
+
+::: {}
+![](assets/figures/delta_action_targets.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+The action representation is a modeling choice.
+
+In a planar PushT-style task, the raw demonstration may contain target positions in image or workspace coordinates. We can train the policy to predict those absolute targets directly, but we can also subtract the current agent position and predict a displacement. That displacement is the delta action $\Delta p_t$.
+
+In the formula, $p^{agent}_t$ is the current position of the controlled point, and $p^{target}_t$ is the next target position associated with the expert action. Their difference, $\Delta p_t=p^{target}_t-p^{agent}_t$, tells the robot where to move relative to where it is now.
+
+Delta actions often make the learning problem easier because the same local motion has the same representation in different parts of the workspace. For example, "move a little to the right and upward" can be represented similarly whether the agent is near the center or near the edge. Absolute targets force the network to model the global coordinate system more directly.
+
+This is not a universal rule. If the task requires reaching a fixed global pose, absolute targets may be appropriate. The point is that action representation changes what distribution the diffusion model learns. In robot deployment, the low-level controller must also know which representation the policy outputs: a delta target must be integrated or converted into a command before execution.
 :::
 
 ---
@@ -115,9 +199,11 @@ Conditioning tells the denoiser which action chunk should emerge from the noise.
 :::
 
 ::: {.notes}
-Main point: the diffusion model is conditional in the policy setting.
+The diffusion model is conditional in the policy setting.
 
 Unconditional diffusion would sample action trajectories from the marginal distribution of demonstrations. A robot policy needs the action distribution for the current scene and robot state.
+
+"Conditioning" means extra information given to the denoising network so that it does not generate an arbitrary demonstration-like action chunk. RGB or RGB-D images describe the scene. Proprioception describes the robot itself: joint angles, joint velocities, end-effector pose, gripper state. Force/torque measurements describe current contact. Tactile signals describe local contact at the fingers. A task label or language instruction tells the model which goal should be pursued.
 
 The conditioning path can include image encoders, proprioceptive MLPs, force encoders, or task embeddings. The design choice depends on the task and sensing stack.
 
@@ -149,13 +235,54 @@ $$
 :::
 
 ::: {.notes}
-Main point: explain the architecture used in the Diffusion Policy exercise.
-
 The action sequence is represented as a one-dimensional temporal signal with action dimension as channels. A 1D U-Net denoises this sequence along the horizon.
 
-The observation history and diffusion step are embedded into a conditioning vector. In the notebook, conditioning is injected into residual blocks using FiLM: the conditioning vector produces scale and shift parameters for intermediate features.
+A 1D U-Net is an encoder-decoder convolutional network over a sequence. "1D" means the convolution slides along one axis, here time or action-horizon index. The action dimensions behave like channels, similar to RGB channels in an image CNN. The encoder builds coarser temporal features; the decoder maps those features back to a denoised action sequence of the original length; skip connections preserve fine timing information.
 
-This is a clean way to connect the current robot context to every denoising step.
+The observation history and diffusion step are embedded into a conditioning vector. "Embedding" means mapping raw inputs, such as a timestep index or sensor vector, into a learned feature vector. In the notebook, this conditioning vector is injected into the residual blocks using FiLM, which the next slide covers in detail.
+
+The takeaway here is just the interface: a 1D U-Net denoises the action sequence, and the robot context enters through a conditioning vector rather than being concatenated to the noisy actions.
+:::
+
+---
+
+## Conditioning with FiLM
+
+FiLM injects context by modulating hidden features:
+
+::: {.equation-card}
+$$
+h'
+=
+\gamma(c)\odot h
++
+\beta(c)
+$$
+:::
+
+::: {.two-column-balanced}
+::: {.compact}
+- $h$: intermediate feature map in the denoiser
+- $c$: observation and diffusion-step embedding
+- $\gamma(c)$: feature-wise scale
+- $\beta(c)$: feature-wise shift
+:::
+
+::: {}
+![](assets/figures/film_modulation.svg){width=100%}
+:::
+:::
+
+::: {.notes}
+FiLM is one concrete answer to the question "how does the observation enter the denoiser?".
+
+The denoiser has hidden features $h$ inside its residual blocks. These features encode the current noisy action chunk at some temporal resolution. The conditioning vector $c$ contains information such as the observation history and the diffusion step. A small network maps $c$ to two vectors, $\gamma(c)$ and $\beta(c)$.
+
+The formula $h'=\gamma(c)\odot h+\beta(c)$ says that the conditioning scales and shifts the hidden features channel by channel. The symbol $\odot$ means element-wise multiplication. If a component of $\gamma(c)$ is large, that feature channel is amplified. If it is small, the channel is suppressed. The shift $\beta(c)$ can turn features on or off by changing their baseline.
+
+This is more structured than simply concatenating the observation to the input action chunk. FiLM lets the same U-Net backbone behave differently depending on the current state of the robot and the current noise level. During early denoising steps, the model may use conditioning to choose a coarse action mode. During late steps, the same conditioning can refine local timing and magnitudes.
+
+The important takeaway is that Diffusion Policy is not only "diffusion plus observations". There is an architectural interface between the noisy action sequence and the context. FiLM is a common and practical interface for that conditioning.
 :::
 
 ---
@@ -185,11 +312,56 @@ $$
 :::
 
 ::: {.notes}
-Main point: training is supervised denoising of expert action chunks.
+Training is supervised denoising of expert action chunks.
 
 The dataset provides clean action chunks. During training, we corrupt them with the forward diffusion process and ask the network to recover the noise. Because the clean chunk came from an expert demonstration, denoising learns the structure of expert-like actions.
 
+In the policy loss, $\mathcal{L}_{policy}$ is the squared noise-prediction loss specialized to action chunks. $\epsilon$ is the actual Gaussian noise added to the clean expert chunk. $\epsilon_\theta(\mathbf{A}_k,k,\mathbf{o}_{t-T_o:t})$ is the network's estimate of that noise from the noisy action chunk $\mathbf{A}_k$, the diffusion step $k$, and the observation history. The expectation means we average over many training windows, many random diffusion steps, and many random noise samples. The target is known because we added the noise ourselves.
+
 Normalization is not a minor detail. Diffusion assumes that the data scale is compatible with Gaussian noise. Poorly scaled actions can make the denoising problem ill-conditioned.
+:::
+
+---
+
+## Normalization Statistics Travel with the Checkpoint
+
+Deployment must reuse the same statistics used during training:
+
+::: {.equation-card}
+$$
+\tilde{o}
+=
+\frac{o-\mu_o}{\sigma_o},
+\qquad
+\tilde{a}
+=
+\frac{a-\mu_a}{\sigma_a},
+\qquad
+a
+=
+\sigma_a\tilde{a}+\mu_a
+$$
+:::
+
+::: {.compact}
+The deployed policy needs, bundled together as one contract:
+
+- model weights $\theta$
+- observation statistics $\mu_o,\sigma_o$
+- action statistics $\mu_a,\sigma_a$
+- the same action representation used in training
+:::
+
+::: {.notes}
+The normalization statistics are part of the deployed policy.
+
+During training, observations and actions are normalized with statistics computed from the demonstration dataset. The observation normalization maps raw sensor or state values $o$ into $\tilde{o}$. The action normalization maps expert actions $a$ into $\tilde{a}$. The denoiser is trained in this normalized space, so its sampled output is also a normalized action.
+
+At inference time, the robot starts with a raw observation. Before the policy sees it, the system must compute $\tilde{o}=(o-\mu_o)/\sigma_o$ using the training-set observation mean $\mu_o$ and standard deviation $\sigma_o$. After denoising, the policy produces a normalized action $\tilde{a}$. The robot cannot execute $\tilde{a}$ directly. It must be converted back with $a=\sigma_a\tilde{a}+\mu_a$.
+
+This is a common deployment failure mode. The neural network checkpoint may load correctly, the sampler may run correctly, and the code may still fail because the normalization statistics are missing, recomputed on different data, or applied in the wrong order. In that case the policy is effectively speaking a different numerical language from the robot.
+
+For this reason, a serious checkpoint should save the weights together with the normalizers and the action convention. If the model was trained to output delta actions in normalized pixel coordinates, deployment must not interpret the output as absolute positions in meters. Normalization, denormalization, and action semantics are part of one contract.
 :::
 
 ---
@@ -223,9 +395,13 @@ The policy constructs an action sequence through iterative refinement rather tha
 :::
 
 ::: {.notes}
-Main point: inference is the reverse diffusion loop applied to actions.
+Inference is the reverse diffusion loop applied to actions.
 
 The robot starts from noise in action space, not from a previous plan. The conditioning information guides the denoising process toward an action chunk that is plausible under the current observation.
+
+$\mathbf{A}_k$ is the current noisy action chunk at diffusion step $k$. The term $\epsilon_\theta(\mathbf{A}_k,k,\mathbf{o}_{t-T_o:t})$ is the predicted noise in that chunk. $\alpha_k$, $\bar{\alpha}_k$, and $\tilde{\beta}_k$ are the same diffusion schedule quantities as before. $z$ is fresh Gaussian noise. This displayed equation is the DDPM-style update; a DDIM deployment changes the update but keeps the same trained noise-prediction network.
+
+The output after the final denoising step is a normalized action chunk. "Denormalize" means converting it back to physical units: meters, radians, velocities, gripper commands, or controller gains depending on the action representation.
 
 This iterative process is exactly why inference efficiency becomes important. Sampling quality and latency are coupled by the number of denoising steps.
 :::
@@ -259,9 +435,11 @@ $$
 :::
 
 ::: {.notes}
-Main point: action chunking is connected to receding horizon control.
+Action chunking is closely connected to receding horizon control.
 
 This is similar in spirit to model predictive control: plan ahead, execute a prefix, then replan with fresh observations. The future part of the sampled chunk is useful because it gives the prefix temporal coherence, but it does not have to be executed open-loop.
+
+$H$ is the prediction horizon: how far into the future the model samples. $h$ is the execution horizon: how many of those sampled actions are actually sent to the robot before sampling again. Usually $h\le H$. If $h=1$, the robot replans after every action, which is reactive but expensive. If $h$ is large, inference is amortized, but the robot may keep executing stale actions after the world changes.
 
 The execution horizon is a design parameter. If it is too long, the robot may follow stale actions after contact conditions change. If it is too short, inference cost may dominate the loop.
 :::
@@ -286,9 +464,9 @@ The price is inference cost. A diffusion policy is a controller only after sampl
 :::
 
 ::: {.notes}
-Main point: summarize the value proposition and transition to inference efficiency.
-
 Diffusion Policy is powerful because it turns imitation learning into conditional generative modeling over action sequences. It directly addresses multimodal demonstrations and temporal coherence.
+
+At this stage, Diffusion Policy can be stated in one sentence: it is a conditional diffusion model whose generated object is a short action trajectory, not an image. The denoising network becomes a robot policy only after it is wrapped with observation conditioning, a sampler, normalization and denormalization, receding-horizon execution, and a robot controller.
 
 But the policy is not complete just because the network can sample plausible chunks. On a robot, we must decide how many denoising steps to use, how often to replan, how to execute the sampled actions, and how to preserve safety under contact.
 :::

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 430" role="img" aria-label="Demonstration trajectories converted into observation windows and action chunks">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    </marker>
+    <style>
+      .axis { stroke: #94a3b8; stroke-width: 3; }
+      .dot { fill: #ffffff; stroke: #2563eb; stroke-width: 3; }
+      .obs { fill: #dbeafe; stroke: #2563eb; stroke-width: 3; rx: 10; }
+      .act { fill: #cffafe; stroke: #0891b2; stroke-width: 3; rx: 10; }
+      .bad { fill: #fff7ed; stroke: #f97316; stroke-width: 3; rx: 10; }
+      .label { font: 700 26px Inter, Arial, sans-serif; fill: #12213f; }
+      .small { font: 500 20px Inter, Arial, sans-serif; fill: #42526b; }
+      .math { font: 600 23px Inter, Arial, sans-serif; fill: #12213f; }
+      .arrow { fill: none; stroke: #2563eb; stroke-width: 4; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <text x="50" y="55" class="label">expert episode</text>
+  <line x1="75" y1="105" x2="785" y2="105" class="axis"/>
+  <path d="M785 105 L815 105" class="arrow"/>
+  <text x="830" y="113" class="small">robot time</text>
+
+  <g>
+    <circle cx="90" cy="105" r="10" class="dot"/>
+    <circle cx="150" cy="105" r="10" class="dot"/>
+    <circle cx="210" cy="105" r="10" class="dot"/>
+    <circle cx="270" cy="105" r="10" class="dot"/>
+    <circle cx="330" cy="105" r="10" class="dot"/>
+    <circle cx="390" cy="105" r="10" class="dot"/>
+    <circle cx="450" cy="105" r="10" class="dot"/>
+    <circle cx="510" cy="105" r="10" class="dot"/>
+    <circle cx="570" cy="105" r="10" class="dot"/>
+    <circle cx="630" cy="105" r="10" class="dot"/>
+    <circle cx="690" cy="105" r="10" class="dot"/>
+    <circle cx="750" cy="105" r="10" class="dot"/>
+  </g>
+
+  <rect x="270" y="165" width="180" height="72" class="obs"/>
+  <text x="360" y="195" text-anchor="middle" class="label">observation</text>
+  <text x="360" y="223" text-anchor="middle" class="math">o<tspan baseline-shift="sub" font-size="14">t-T<tspan baseline-shift="sub" font-size="10">o</tspan>+1:t</tspan></text>
+
+  <rect x="450" y="165" width="300" height="72" class="act"/>
+  <text x="600" y="195" text-anchor="middle" class="label">action chunk</text>
+  <text x="600" y="223" text-anchor="middle" class="math">a<tspan baseline-shift="sub" font-size="14">t:t+H-1</tspan></text>
+
+  <path d="M360 240 L435 296" class="arrow"/>
+  <path d="M600 240 L485 296" class="arrow"/>
+
+  <rect x="315" y="300" width="290" height="86" class="bad"/>
+  <text x="460" y="333" text-anchor="middle" class="label">one training pair</text>
+  <text x="460" y="364" text-anchor="middle" class="small">slide the window to make many pairs</text>
+
+  <text x="55" y="395" class="small">Windows are cut inside one episode; they should not cross reset boundaries.</text>
+</svg>

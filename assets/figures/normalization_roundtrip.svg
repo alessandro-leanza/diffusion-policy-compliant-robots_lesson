@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-label="Normalization and denormalization round trip for diffusion policy">
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0891b2"/>
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #d8e2f0; stroke-width: 3; rx: 14; }
+      .soft { fill: #f1f7ff; stroke: #d8e2f0; stroke-width: 3; rx: 14; }
+      .label { font: 700 28px Inter, Arial, sans-serif; fill: #12213f; }
+      .small { font: 500 21px Inter, Arial, sans-serif; fill: #42526b; }
+      .math { font: 600 25px Inter, Arial, sans-serif; fill: #12213f; }
+      .arrow { fill: none; stroke: #2563eb; stroke-width: 4; marker-end: url(#arrow-blue); }
+      .arrow2 { fill: none; stroke: #0891b2; stroke-width: 4; marker-end: url(#arrow-cyan); }
+    </style>
+  </defs>
+
+  <rect x="35" y="70" width="205" height="120" class="box"/>
+  <text x="137.5" y="119" text-anchor="middle" class="label">raw data</text>
+  <text x="137.5" y="153" text-anchor="middle" class="small">pixels, poses, actions</text>
+
+  <rect x="330" y="55" width="240" height="150" class="soft"/>
+  <text x="450" y="104" text-anchor="middle" class="label">normalize</text>
+  <text x="450" y="145" text-anchor="middle" class="math">x&#771; = (x - &#956;) / &#963;</text>
+  <text x="450" y="176" text-anchor="middle" class="small">common scale for noise</text>
+
+  <rect x="660" y="70" width="205" height="120" class="box"/>
+  <text x="762.5" y="119" text-anchor="middle" class="label">diffusion</text>
+  <text x="762.5" y="153" text-anchor="middle" class="small">train and sample</text>
+
+  <path d="M245 130 L318 130" class="arrow"/>
+  <path d="M575 130 L648 130" class="arrow"/>
+
+  <rect x="330" y="270" width="240" height="100" class="soft"/>
+  <text x="450" y="311" text-anchor="middle" class="label">denormalize</text>
+  <text x="450" y="346" text-anchor="middle" class="math">x = &#963;x&#771; + &#956;</text>
+
+  <path d="M762 205 C760 285 645 320 585 320" class="arrow2"/>
+  <path d="M315 320 C250 320 180 270 145 205" class="arrow2"/>
+
+  <text x="450" y="402" text-anchor="middle" class="small">The saved statistics &#956; and &#963; are part of the deployed policy.</text>
+</svg>

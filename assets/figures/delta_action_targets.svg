@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" role="img" aria-label="Delta actions represent a target relative to current agent position">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0891b2"/>
+    </marker>
+    <style>
+      .panel { fill: #ffffff; stroke: #d8e2f0; stroke-width: 3; rx: 16; }
+      .grid { stroke: #e2e8f0; stroke-width: 2; }
+      .agent { fill: #2563eb; }
+      .target { fill: #f97316; }
+      .arrow { fill: none; stroke: #0891b2; stroke-width: 6; marker-end: url(#arrow); }
+      .label { font: 700 28px Inter, Arial, sans-serif; fill: #12213f; }
+      .small { font: 500 21px Inter, Arial, sans-serif; fill: #42526b; }
+      .math { font: 700 25px Inter, Arial, sans-serif; fill: #12213f; }
+    </style>
+  </defs>
+
+  <rect x="45" y="55" width="380" height="290" class="panel"/>
+  <text x="235" y="95" text-anchor="middle" class="label">absolute target</text>
+  <line x1="90" y1="135" x2="380" y2="135" class="grid"/>
+  <line x1="90" y1="195" x2="380" y2="195" class="grid"/>
+  <line x1="90" y1="255" x2="380" y2="255" class="grid"/>
+  <line x1="130" y1="115" x2="130" y2="305" class="grid"/>
+  <line x1="210" y1="115" x2="210" y2="305" class="grid"/>
+  <line x1="290" y1="115" x2="290" y2="305" class="grid"/>
+  <circle cx="165" cy="250" r="17" class="agent"/>
+  <circle cx="315" cy="155" r="17" class="target"/>
+  <text x="235" y="382" text-anchor="middle" class="math">a<tspan baseline-shift="sub" font-size="15">t</tspan> = p<tspan baseline-shift="sub" font-size="15">target</tspan></text>
+
+  <rect x="475" y="55" width="380" height="290" class="panel"/>
+  <text x="665" y="95" text-anchor="middle" class="label">delta action</text>
+  <line x1="520" y1="135" x2="810" y2="135" class="grid"/>
+  <line x1="520" y1="195" x2="810" y2="195" class="grid"/>
+  <line x1="520" y1="255" x2="810" y2="255" class="grid"/>
+  <line x1="560" y1="115" x2="560" y2="305" class="grid"/>
+  <line x1="640" y1="115" x2="640" y2="305" class="grid"/>
+  <line x1="720" y1="115" x2="720" y2="305" class="grid"/>
+  <circle cx="595" cy="250" r="17" class="agent"/>
+  <circle cx="745" cy="155" r="17" class="target"/>
+  <path d="M610 240 L728 165" class="arrow"/>
+  <text x="665" y="382" text-anchor="middle" class="math">&#916;p<tspan baseline-shift="sub" font-size="15">t</tspan> = p<tspan baseline-shift="sub" font-size="15">target</tspan> - p<tspan baseline-shift="sub" font-size="15">agent</tspan></text>
+
+  <text x="450" y="420" text-anchor="middle" class="small">The same motion can be represented in a coordinate frame centered on the current robot state.</text>
+</svg>

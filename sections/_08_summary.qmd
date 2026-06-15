@@ -9,11 +9,11 @@
 - Variable admittance is a natural bridge between learned behavior and physical interaction.
 
 ::: {.notes}
-Main point: summarize the lecture as a chain from demonstrations to generative policies to compliant physical execution.
+The lecture can be summarized as a chain from demonstrations, to generative policies, to compliant physical execution.
 
-Intuition: the policy proposes temporally coherent behavior, while compliance determines how that behavior survives contact uncertainty.
+The policy proposes temporally coherent behavior, while compliance determines how that behavior survives contact uncertainty.
 
-Warning: avoid leaving students with the impression that one model solves everything; deployment is a system-level problem.
+No single model solves everything. Deployment is a system-level problem.
 :::
 
 ---
@@ -26,11 +26,11 @@ Warning: avoid leaving students with the impression that one model solves everyt
 - What benchmarks best measure contact-rich manipulation quality?
 
 ::: {.notes}
-Main point: open questions should invite students to think beyond benchmark success rates.
+These open questions push us beyond benchmark success rates.
 
-Intuition: a policy that succeeds 90 percent of the time may still be unacceptable if failures involve unsafe contact.
+A policy that succeeds 90 percent of the time may still be unacceptable if the failures involve unsafe contact.
 
-Warning: "safe learning" claims need careful definitions of safety, uncertainty, and deployment conditions.
+"Safe learning" claims need careful definitions of safety, uncertainty, and deployment conditions.
 :::
 
 ---
@@ -43,11 +43,11 @@ Warning: "safe learning" claims need careful definitions of safety, uncertainty,
 - How should we trade off task success, safety, and interpretability?
 
 ::: {.notes}
-Main point: use these questions to start discussion rather than to test recall.
+These questions are about design trade-offs rather than recall.
 
-Intuition: ask students to argue for conservative architectures first, then identify what performance they might lose.
+One way to approach them is to argue for conservative architectures first, and only then identify what performance they might lose.
 
-Warning: keep the discussion grounded in robot constraints, not only machine-learning model capacity.
+The discussion should stay grounded in robot constraints, not only in machine-learning model capacity.
 :::
 
 ---
@@ -77,6 +77,12 @@ Warning: keep the discussion grounded in robot constraints, not only machine-lea
 :::
 :::
 
+::: {.notes}
+The references are organized around the main blocks of the lecture. Ross and Bagnell cover imitation learning and covariate shift; Ho and Song cover diffusion sampling; Chi et al. cover Diffusion Policy; and Hogan, Ott, Villani, Whitney, Abu-Dakka, Saveriano, Buchli, Stulp, Theodorou, and Schaal cover force, impedance, admittance, and variable-compliance control.
+
+For deeper study, the useful move is to read across categories instead of staying within one field. The lecture only makes sense when the generative-model view and the robot-control view are combined. The project-specific case study should also be treated as preliminary where unpublished numbers are shown; the mature literature is represented by these references.
+:::
+
 ---
 
 ## Thank You for Your Attention
@@ -90,5 +96,7 @@ github.com/alessandro-leanza
 :::
 
 ::: {.notes}
-Close the lecture and leave contact details visible for questions, follow-up, and repository access.
+My contact details are here for questions, follow-up, and repository access. The final message is practical: the lecture has connected demonstrations, diffusion-based action generation, real-time inference, and compliant control, but the strongest message is that robot learning is a system problem. A good learned policy still needs the right controller interface, timing budget, sensing stack, and safety envelope.
+
+Good closing questions connect the two halves of the lecture: where the generative policy should stop, where the controller should take over, and what evidence would convince us that learned compliance is actually safer or more effective than a conservative hand-designed controller.
 :::
