@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="360" viewBox="0 0 1040 360" role="img" aria-labelledby="title desc">
+  <title id="title">Diffusion policy action vector</title>
+  <desc id="desc">A 9-D action vector: six pose deltas for desired motion, a stiffness K, a damping ratio zeta, and a binary hand open/grasp command.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fbff; }
+      .box { fill: #ffffff; stroke: #d8e2f0; stroke-width: 2; }
+      .blue { fill: #dbeafe; stroke: #2563eb; stroke-width: 2; }
+      .teal { fill: #e0f2fe; stroke: #0891b2; stroke-width: 2; }
+      .amber { fill: #fffbeb; stroke: #f59e0b; stroke-width: 2; }
+      .green { fill: #ecfdf5; stroke: #16a34a; stroke-width: 2; }
+      .label { font: 700 25px sans-serif; fill: #12213f; }
+      .body { font: 500 20px sans-serif; fill: #1f2937; }
+      .small { font: 500 17px sans-serif; fill: #637083; }
+      .mono { font: 700 22px monospace; fill: #12213f; }
+      .brace { stroke: #637083; stroke-width: 2; fill: none; }
+    </style>
+  </defs>
+  <rect class="bg" width="1040" height="360"/>
+
+  <text class="label" x="520" y="50" text-anchor="middle">Action vector a_t (9-D) — predicted over a receding horizon</text>
+
+  <!-- pose deltas: 6 cells -->
+  <rect class="box blue" x="40"  y="100" width="78" height="90"/>
+  <rect class="box blue" x="118" y="100" width="78" height="90"/>
+  <rect class="box blue" x="196" y="100" width="78" height="90"/>
+  <rect class="box blue" x="274" y="100" width="78" height="90"/>
+  <rect class="box blue" x="352" y="100" width="78" height="90"/>
+  <rect class="box blue" x="430" y="100" width="78" height="90"/>
+  <text class="mono" x="79"  y="153" text-anchor="middle">Δx</text>
+  <text class="mono" x="157" y="153" text-anchor="middle">Δy</text>
+  <text class="mono" x="235" y="153" text-anchor="middle">Δz</text>
+  <text class="mono" x="313" y="153" text-anchor="middle">ΔRx</text>
+  <text class="mono" x="391" y="153" text-anchor="middle">ΔRy</text>
+  <text class="mono" x="469" y="153" text-anchor="middle">ΔRz</text>
+
+  <!-- stiffness -->
+  <rect class="box amber" x="528" y="100" width="120" height="90"/>
+  <text class="mono" x="588" y="153" text-anchor="middle">K</text>
+
+  <!-- damping ratio -->
+  <rect class="box teal" x="668" y="100" width="120" height="90"/>
+  <text class="mono" x="728" y="153" text-anchor="middle">ζ</text>
+
+  <!-- hand -->
+  <rect class="box green" x="808" y="100" width="150" height="90"/>
+  <text class="mono" x="883" y="153" text-anchor="middle">hand</text>
+
+  <!-- group brace under pose deltas -->
+  <path class="brace" d="M40 208 L40 220 L508 220 L508 208"/>
+  <text class="body"  x="274" y="252" text-anchor="middle">pose delta (6)</text>
+  <text class="small" x="274" y="278" text-anchor="middle">desired motion / reference trajectory</text>
+
+  <text class="body"  x="588" y="252" text-anchor="middle">stiffness</text>
+  <text class="small" x="588" y="278" text-anchor="middle">how compliant</text>
+
+  <text class="body"  x="728" y="252" text-anchor="middle">damping ratio</text>
+  <text class="small" x="728" y="278" text-anchor="middle">how compliant</text>
+
+  <text class="body"  x="883" y="252" text-anchor="middle">open / grasp</text>
+  <text class="small" x="883" y="278" text-anchor="middle">binary</text>
+
+  <text class="small" x="520" y="330" text-anchor="middle">one forward pass → what to do (motion) and how stiff to be (K, ζ) at once</text>
+</svg>

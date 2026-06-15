@@ -30,11 +30,6 @@ $$
 
 An admittance controller handles contact response.
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Policy outputs desired trajectory</div>
-<div class="placeholder-path">assets/figures/dp_outputs_trajectory.png</div>
-:::
-
 ::: {.notes}
 Main point: this is the conservative architecture: learn desired motion and keep compliance in a separate controller.
 
@@ -57,54 +52,212 @@ p_\theta(\cdot \mid \mathbf{o}_{t-T_o:t})
 $$
 :::
 
-The controller then enforces bounds before execution.
-
-::: {.figure-placeholder}
-<div class="placeholder-title">Policy outputs trajectory and gains</div>
-<div class="placeholder-path">assets/figures/dp_outputs_admittance_parameters.png</div>
-:::
+The controller then enforces bounds before execution. *The rest of this section shows how we actually built this.*
 
 ::: {.notes}
 Main point: this architecture lets the policy generate both motion and interaction parameters.
 
 Intuition: the policy can learn that some task phases require high stiffness while others require yielding behavior.
 
-Warning: outputting gains directly is high risk unless bounds, smoothing, and stability checks are enforced.
+Warning: outputting gains directly is high risk unless bounds, smoothing, and stability checks are enforced. The next slides instantiate this idea on real hardware.
 :::
 
 ---
 
-## Sensor Modalities
+# Case Study: A Variable Admittance Diffusion Policy {.section-divider}
 
-Potential conditioning signals:
+## Learning *What to Do* and *How Compliant to Be*
+
+A diffusion policy that outputs motion **and** admittance gains on a Doosan arm.
+
+- The robot runs a **variable admittance controller** as its low-level interface.
+- A **diffusion policy** predicts, at every step, a motion command **plus** the stiffness `K` and damping ratio `ζ` the controller should use.
+- Compliance is **learned from demonstrations**, not hand-tuned per task.
+
+System at a glance: `Doosan m0609` · `Bota wrist F/T` · `Inspire hand` · `RealSense + Orbbec cameras`
+
+::: {.notes}
+This is where the abstract pipeline becomes a concrete system. Everything from the previous slides — multimodal conditioning, a policy that outputs both a desired trajectory and compliance parameters, and a compliant low-level controller — is implemented here on a 6-DOF Doosan m0609 collaborative arm. The one-line thesis: instead of fixing the robot's stiffness by hand for each task, we let the policy decide how compliant to be, moment by moment, conditioned on what it sees and feels. The rest of the block walks through the controller, what the policy predicts, how it is deployed in real time, and what we found.
+
+TODO citation: add reference to the project / thesis once available.
+:::
+
+---
+
+## The System Stack
 
 ::: {.two-column-balanced}
 ::: {.compact}
-- vision for scene context
-- force/torque for interaction state
-- proprioception for robot state
-- EMG for human intent or assistance cues
+- **Robot:** Doosan **m0609**, 6 DOF, velocity interface (`speedl`).
+- **Force sensing:** **Bota** wrist F/T sensor; per-episode tare, frame-corrected into the base frame.
+- **End-effector:** Inspire multi-finger hand (open/grasp).
+- **Vision:** RealSense (wrist) + Orbbec Femto (third-person).
 :::
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Multimodal robot sensing</div>
-<div class="placeholder-path">assets/figures/multimodal_robot_sensing.png</div>
-:::
+```text
+ cameras + F/T + proprioception
+       │  (observations)
+       ▼
+ Diffusion Policy          ~20 Hz   (slow)
+       │  Δpose, K, ζ, hand
+       ▼
+ Variable Admittance Ctrl  ~100 Hz  (fast)
+       │  velocity command (speedl)
+       ▼
+ Doosan m0609 + Inspire hand
+```
 :::
 
 ::: {.notes}
-Main point: multimodal observations are useful because contact and human intent are not fully visible from images alone.
-
-Intuition: vision tells where objects are, force tells what interaction is happening, and EMG may hint at intended human assistance.
-
-Warning: more modalities increase synchronization and calibration complexity; noisy signals can mislead the policy.
+Bottom layer is a real Doosan m0609 driven through its velocity command interface, speedl. Contact force is measured by a Bota force/torque sensor at the wrist; we tare it at the start of every episode while the arm is in free space, and we rotate the wrench into the robot base frame before using it — the admittance law must reason about forces in a consistent frame. On top sits the two-rate control structure the whole case study turns on: a slow diffusion policy at ~20 Hz that decides intent, and a fast admittance controller at ~100 Hz that turns that intent into safe, contact-aware motion. This is exactly the slow–fast policy interface pattern from earlier — here it is, built.
 :::
 
 ---
 
-## Safety Bounds for Learned Parameters
+## The Compliant Controller {.smaller}
 
-Learned gains should be projected or constrained:
+The "fast" loop: a virtual mass–spring–damper between measured force and commanded motion.
+
+::: {.equation-card}
+$$
+M\,\ddot{\Delta x} + B\,\dot{\Delta x} + K\,(\Delta x - \Delta x_{\text{ref}}) = F_{\text{ext}}
+$$
+:::
+
+- Damping is **derived**, not free: $B = 2\,\zeta\sqrt{M\,K}$ (per axis).
+- Virtual mass fixed (`M_trans ≈ 5 kg`, `M_rot ≈ 0.5 kg·m²`); **`K` and `ζ` are the knobs**.
+- Runs at **~100 Hz**: integrates force → reference velocity → `speedl`.
+- Hard safety limits on velocity and displacement at every step.
+
+::: {.notes}
+The same mass-spring-damper admittance model from the generic part, now as the actual low-level controller. Two points. First, damping is not independent: we set it from stiffness and a damping ratio ζ via B = 2ζ√(MK), so the system stays well-damped as stiffness changes — the policy only reasons about K and ζ, not absolute damping. Second, the virtual mass is fixed; what shapes interaction behavior is K and ζ. Everything above this layer exists to choose those two numbers well. The loop runs near 100 Hz, integrates the measured external force into a reference velocity, and sends it as a velocity command, with hard caps on velocity and displacement so a bad command can never become a fast or large motion.
+:::
+
+---
+
+## The Policy Output: Motion *and* Compliance
+
+The action is a **9-D** vector predicted over a horizon (receding horizon, re-planned):
+
+![](assets/figures/dp_action_vector.svg){width=92%}
+
+- **6** pose deltas → desired motion · **1** stiffness `K` + **1** damping ratio `ζ` → *how compliant to be* · **1** binary hand open/grasp.
+
+*This is the "trajectory + compliance parameters" architecture, realized.*
+
+::: {.notes}
+Here is the concrete answer to the earlier question — "should the policy output low-level control parameters directly?" Here, yes. The action is nine numbers: six pose deltas defining the desired motion, then stiffness K and damping ratio ζ for the admittance controller, and a binary hand open/close. A single forward pass answers both questions at once — what the end-effector should do, and how stiff or soft to be while doing it. Like any diffusion policy, it predicts a short horizon of future actions and we re-plan as we go. The compliance channel is what makes this more than a motion policy: the network can stiffen to push a pipe into a hole and then go soft the instant a latch releases.
+:::
+
+---
+
+## Conditioning: Vision + Force + State
+
+::: {.two-column-balanced}
+::: {.compact}
+- **RGB image** (84×84) → ResNet-18 encoder + spatial-softmax keypoints.
+- **Wrench** (6-D force/torque from the Bota sensor).
+- **Proprioceptive state** (12-D: TCP pose + hand joints).
+- Short **observation history** (last 2 frames) → predict next action chunk.
+:::
+
+::: {.figure-placeholder}
+<div class="placeholder-title">Vision + force + state → encoder → policy</div>
+<div class="placeholder-path">TODO assets/figures/dp_conditioning.svg</div>
+:::
+:::
+
+- Force feedback lets the policy *react to contact*, not just to pixels.
+- Modular variants exist: **vision-only**, **vision+force**, **vision+force+state**.
+
+::: {.notes}
+Conditioning follows the menu from earlier: vision, force/torque, proprioception. The image is downsized and passed through a small ResNet encoder with a spatial-softmax head that turns the feature map into a handful of keypoints. The wrench and the robot/hand state are concatenated as low-dimensional inputs. The policy looks at a short history — the last couple of observations — and predicts the next chunk of actions. Force is the interesting modality: because the policy can see contact forces, it can modulate both its motion and its commanded stiffness in response to what it touches. We built several variants — vision only, vision plus force, vision plus force plus state — precisely to ask which signals actually matter, the experiment a few slides from now.
+:::
+
+---
+
+## Slow Policy, Fast Compliance
+
+![](assets/figures/dp_slow_fast_timeline.svg){width=90%}
+
+- The policy sets **intent and compliance**; the controller handles **contact dynamics**.
+- Fast inner loop = stability and safety even if the policy is occasionally noisy.
+- Decouples a heavy generative model from a hard real-time control budget.
+
+::: {.notes}
+This is the architectural payoff. A diffusion policy is expensive to sample, so it cannot run inside a hard 100 Hz control loop — and we don't ask it to. The policy runs at about 20 Hz and only decides high-level intent and the compliance gains; the admittance controller runs roughly five times faster and is the thing that actually reacts to measured forces tick by tick. Two benefits. First, real-time feasibility: the slow expensive model and the fast hard-real-time loop are decoupled. Second, safety and stability: the inner mass-spring-damper loop is a physical low-pass filter on the policy's commands, so even a momentarily bad prediction gets absorbed rather than slammed into the robot. This is why pairing a learned policy with a compliant controller is more than a convenience — it is what makes deploying a generative policy on contact-rich hardware tractable.
+:::
+
+---
+
+## Fitting Diffusion Into the Control Budget {.smaller}
+
+Problem → levers → result:
+
+- **Budget:** one policy query must fit a ~50 ms slot (20 Hz).
+- **Trained** with full DDPM (~100 denoising steps) for quality.
+- **Deployed** with **DDIM and far fewer steps (~10)** — fewer network evals.
+- **Action chunking:** sample once, execute several steps, re-plan.
+- **Systems fix:** a single-threaded executor removed GIL contention → predict time dropped from **~140 ms to ~11 ms**.
+- **Result:** steady **~20 Hz** inference with large idle margin.
+
+::: {.equation-card}
+$$
+T_{\text{query}} = T_{\text{sense}} + T_{\text{enc}} + K\cdot T_{\text{net}} + T_{\text{comm}}
+$$
+:::
+
+::: {.notes}
+This closes the loop with the inference-efficiency part of the lecture. The control budget is about 50 ms per query. We train with the full many-step DDPM sampler because it gives the best action quality offline, but we don't deploy it that way — at run time we switch to DDIM with roughly ten denoising steps, the classic latency-quality trade-off: far fewer network evaluations for a small quality cost we validate. Action chunking helps too: we sample a short horizon once and execute several steps before re-planning, amortizing inference cost. The biggest single win, though, was a plain systems bug, not a modeling change — the ROS node used a multi-threaded executor and the Python GIL was thrashing between the camera, force, and pose callbacks; switching to a single-threaded executor cut prediction time by more than an order of magnitude. The lesson: "make the diffusion policy real-time" is partly sampler choice and partly ordinary engineering.
+:::
+
+---
+
+## Collecting Compliant Demonstrations
+
+- Human teleoperates the arm through the **same admittance controller** used at deploy time.
+- Each step logs: pose delta, **commanded K and ζ**, hand state, wrench, proprioception, RGB.
+- Recorded at **~50 Hz**; **force sensor tared per episode**.
+- **"Pre-image" targets:** we record the human's *intended* command + stiffness, **before** the controller transforms it — so the policy learns intent, not the post-controller velocity.
+- Example scale: pipe-insertion set ≈ **200 episodes / ~100k frames**.
+
+::: {.notes}
+Demonstrations are collected by teleoperating the robot through the exact same compliant controller we deploy with, so there is no train/deploy mismatch in the control interface. At every timestep we log the full picture: the motion delta, the stiffness and damping the operator was using, the hand state, the measured wrench, the robot state, and the camera image, at about 50 Hz, with the force sensor re-zeroed at the start of each episode. One subtle but important choice is the training target. We record the "pre-image" — the operator's intended command and chosen stiffness before the admittance controller turns it into a velocity — rather than the post-controller output. That way the policy learns the human's intent and compliance strategy directly, and the admittance layer does the same job at deploy time as during teaching. A representative dataset is on the order of a couple hundred episodes and a hundred thousand frames.
+:::
+
+---
+
+## Where Should Compliance Come From? {.smaller}
+
+*Same task (open a fridge), same data — vary only how compliance is produced.*
+
+| Variant | Policy outputs | Sees force? | Val. loss |
+|---|---|:---:|:---:|
+| Motion only + force obs | Δpose + hand | ✔ | **0.028** |
+| Learned K+ζ, force-blind | Δpose + **K,ζ** + hand | ✗ | 0.030 |
+| Motion only, external compliance | Δpose + hand | ✗ | 0.031 |
+| Learned K+ζ, force-aware | Δpose + **K,ζ** + hand | ✔ | 0.031 |
+| Raw velocity, **no admittance** | velocity + hand | ✗ | 0.042 |
+| BC-RNN baseline (not comparable) | Δpose + K,ζ | ✔ | 0.29 |
+
+::: {.warning}
+**Validation loss ≠ task success** — these are offline fit metrics; on-robot evaluation is the real test.
+:::
+
+::: {.notes}
+The research question turned into an actual ablation. We hold the task and dataset fixed — opening a fridge door — and vary only one thing: where compliance comes from. Does the policy predict the stiffness and damping itself, force-aware or force-blind? Or does it just predict motion and let an external controller handle compliance? Or do we drop the admittance layer entirely and predict raw velocity? Honest observations. First, the variant with no admittance layer is clearly worst — removing the compliant controller hurts, which supports the whole premise. Second, among the rest the numbers are close, and the motion-only policy that can see force fits the demonstrations best, slightly ahead of explicitly predicting K and ζ. That is genuinely interesting and slightly humbling: force observation may matter more than force-derived gain prediction, at least by this metric. And the crucial caveat — this is offline validation loss, how well the network reproduces the demonstrations, not task success on the robot. The BC-RNN row uses a different loss and is there only to show diffusion fits this multimodal data far better, not for a head-to-head number. On-robot evaluation is the next step and the real arbiter.
+
+TODO citation: ablation numbers from project experiments.
+:::
+
+---
+
+## Guardrails on Learned Gains
+
+- Predicted gains are **clipped to an admissible envelope**: e.g. `K ∈ [50, 5000] N/m`, `ζ ∈ [0.3, 5.0]`.
+- **Force-safety saturation:** as contact force approaches the limit, `K` is ramped toward 0 → the arm yields instead of pushing harder.
+- **Impact / release latch:** on a sudden force drop (a latch or clip letting go), briefly force low `K` + high damping to absorb the transient.
+- Hard caps on commanded velocity and displacement at the controller.
 
 ::: {.equation-card}
 $$
@@ -114,36 +267,23 @@ D_{min} \preceq D_d \preceq D_{max}
 $$
 :::
 
-This keeps the learned policy inside an admissible control envelope.
-
 ::: {.notes}
-Main point: learned compliance parameters should be projected into a safe admissible set.
-
-Intuition: think of the neural network as proposing values and the controller as clipping or projecting them before execution.
-
-Warning: simple clipping may not be enough; rate limits and coupled constraints between stiffness and damping may also matter.
+The generic version of this slide said learned gains should be projected into a safe envelope; here is what that looks like in practice. The policy's stiffness and damping are clipped to fixed bounds before they ever reach the controller — the network simply cannot command values outside the admissible range. On top of the static clip there are two dynamic behaviors. One is force-safety saturation: as the measured contact force climbs toward the limit, we ramp stiffness down toward zero, so the robot yields rather than fighting an obstacle — passive protection against jamming. The other is an impact, or release, latch: when a building force suddenly collapses — exactly what happens the instant a fridge latch or clip lets go — we briefly drop to very low stiffness and high damping to absorb the snap. And underneath it all the controller still hard-caps velocity and displacement. This is the concrete answer to "can learned compliance be made safe" — not certifiably yet, but bounded, monitored, and backed by a controller that fails soft.
 :::
 
 ---
 
-## Connection to My Research Direction
+## Case Study — Takeaways
 
-Possible research questions:
+- A diffusion policy can output **motion + compliance (K, ζ)** in one shot, conditioned on vision + force.
+- A **slow policy / fast admittance** split makes a heavy generative model deployable on real contact-rich hardware.
+- Real-time feasibility is **sampler choice + engineering** (DDIM, chunking, executor fix → ~20 Hz).
+- Compliance can be **learned from demonstrations** instead of hand-tuned; safety comes from **bounded gains + a fail-soft controller**.
 
-- Can diffusion policies learn when to be stiff or compliant?
-- How should force and EMG signals condition the policy?
-- What safety filters are needed for learned admittance parameters?
-- How do we evaluate performance beyond task success?
-
-::: {.figure-placeholder}
-<div class="placeholder-title">Research direction system diagram</div>
-<div class="placeholder-path">assets/figures/research_direction_system.png</div>
+::: {.takeaway}
+Open: offline fit ≠ task success — **on-robot evaluation**, and whether explicit learned gains beat force-aware motion-only, remain to be settled.
 :::
 
 ::: {.notes}
-Main point: close the technical arc by positioning the lecture as a research direction.
-
-Intuition: the open problem is not only better imitation, but learned interaction policies that remain safe and interpretable.
-
-Warning: be explicit about what is speculative versus already demonstrated in the literature or in your own work.
+To wrap up: an end-to-end system where a diffusion policy decides both what the robot should do and how compliant it should be, from vision and force, and a fast admittance controller turns that into safe physical interaction. The slow-fast split is the key architectural idea that makes a generative policy runnable on a real arm, and getting it real-time was as much careful engineering as modeling. We can learn compliance from demonstrations rather than tuning it by hand, and we keep it safe with bounded gains and a controller that yields under load. The honest open questions are on screen: our comparisons so far are offline, and the most interesting finding — that simply observing force might matter more than explicitly predicting stiffness — needs to be tested where it counts, on the robot, against actual task success. That is exactly the research direction this work opens up.
 :::

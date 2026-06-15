@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="440" viewBox="0 0 1100 440" role="img" aria-labelledby="title desc">
+  <title id="title">Slow policy, fast compliance timeline</title>
+  <desc id="desc">A slow diffusion policy at about 20 Hz emits motion and compliance gains, while a fast admittance controller at about 100 Hz reacts to measured force on every tick.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrowm" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#637083"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fbff; }
+      .laneblue { fill: #eff6ff; stroke: #2563eb; stroke-width: 2; }
+      .laneteal { fill: #ecfeff; stroke: #0891b2; stroke-width: 2; }
+      .axis { stroke: #637083; stroke-width: 2; fill: none; marker-end: url(#arrowm); }
+      .drop { stroke: #2563eb; stroke-width: 3; fill: none; marker-end: url(#arrow); opacity: 0.7; }
+      .label { font: 700 24px sans-serif; fill: #12213f; }
+      .body { font: 500 19px sans-serif; fill: #1f2937; }
+      .small { font: 500 16px sans-serif; fill: #637083; }
+      .tickbig { fill: #2563eb; }
+      .ticksm { fill: #0891b2; }
+    </style>
+  </defs>
+  <rect class="bg" width="1100" height="440"/>
+
+  <!-- top lane: diffusion policy ~20 Hz -->
+  <rect class="laneblue" x="60" y="70" width="980" height="100"/>
+  <text class="label" x="80" y="58" text-anchor="start">Diffusion policy  ~20 Hz  (slow)</text>
+  <line x1="90" y1="120" x2="1010" y2="120" stroke="#2563eb" stroke-width="3"/>
+  <!-- 5 policy ticks, every 220px -->
+  <circle class="tickbig" cx="110" cy="120" r="11"/>
+  <circle class="tickbig" cx="330" cy="120" r="11"/>
+  <circle class="tickbig" cx="550" cy="120" r="11"/>
+  <circle class="tickbig" cx="770" cy="120" r="11"/>
+  <circle class="tickbig" cx="990" cy="120" r="11"/>
+  <text class="small" x="550" y="100" text-anchor="middle">emits  Δpose, K, ζ, hand  every ~50 ms</text>
+
+  <!-- bottom lane: admittance ~100 Hz -->
+  <rect class="laneteal" x="60" y="270" width="980" height="100"/>
+  <text class="label" x="80" y="258" text-anchor="start">Admittance controller  ~100 Hz  (fast)</text>
+  <line x1="90" y1="320" x2="1010" y2="320" stroke="#0891b2" stroke-width="3"/>
+  <!-- dense ticks every 44px -->
+  <circle class="ticksm" cx="110" cy="320" r="6"/>
+  <circle class="ticksm" cx="154" cy="320" r="6"/>
+  <circle class="ticksm" cx="198" cy="320" r="6"/>
+  <circle class="ticksm" cx="242" cy="320" r="6"/>
+  <circle class="ticksm" cx="286" cy="320" r="6"/>
+  <circle class="ticksm" cx="330" cy="320" r="6"/>
+  <circle class="ticksm" cx="374" cy="320" r="6"/>
+  <circle class="ticksm" cx="418" cy="320" r="6"/>
+  <circle class="ticksm" cx="462" cy="320" r="6"/>
+  <circle class="ticksm" cx="506" cy="320" r="6"/>
+  <circle class="ticksm" cx="550" cy="320" r="6"/>
+  <circle class="ticksm" cx="594" cy="320" r="6"/>
+  <circle class="ticksm" cx="638" cy="320" r="6"/>
+  <circle class="ticksm" cx="682" cy="320" r="6"/>
+  <circle class="ticksm" cx="726" cy="320" r="6"/>
+  <circle class="ticksm" cx="770" cy="320" r="6"/>
+  <circle class="ticksm" cx="814" cy="320" r="6"/>
+  <circle class="ticksm" cx="858" cy="320" r="6"/>
+  <circle class="ticksm" cx="902" cy="320" r="6"/>
+  <circle class="ticksm" cx="946" cy="320" r="6"/>
+  <circle class="ticksm" cx="990" cy="320" r="6"/>
+  <text class="small" x="550" y="358" text-anchor="middle">reacts to measured force on every tick — physical low-pass on policy commands</text>
+
+  <!-- drop arrows: each policy tick sets intent for the next fast window -->
+  <path class="drop" d="M110 134 L110 304"/>
+  <path class="drop" d="M330 134 L330 304"/>
+  <path class="drop" d="M550 134 L550 304"/>
+  <path class="drop" d="M770 134 L770 304"/>
+  <path class="drop" d="M990 134 L990 304"/>
+
+  <!-- time axis -->
+  <path class="axis" d="M60 410 L1010 410"/>
+  <text class="small" x="1015" y="434" text-anchor="end">time</text>
+</svg>
