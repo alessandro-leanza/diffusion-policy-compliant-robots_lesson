@@ -1,20 +1,32 @@
-## Lecture Roadmap
+## What We'll Cover Today
 
-::: {.roadmap}
-- Motivation: contact-rich manipulation and compliant robots
-- Imitation learning and generative policies
-- Diffusion models and Diffusion Policy
-- Inference efficiency for robot control
-- Compliant control and variable admittance
-- Research directions and discussion
+Two halves: first **how a robot decides what to do**, then **how it acts safely under contact**.
+
+::: {.two-column-balanced}
+::: {.compact}
+**Part I — Learning to act**
+
+1. Motivation: contact-rich manipulation
+2. Imitation learning & generative policies
+3. Diffusion models → Diffusion Policy
+4. Making inference real-time
+:::
+
+::: {.compact}
+**Part II — Acting compliantly**
+
+5. Compliant control & variable admittance
+6. Case study: a variable-admittance diffusion policy on a real arm
+7. Research directions & discussion
+:::
 :::
 
 ::: {.notes}
-Main point: frame the lecture as a progression from data-driven policy learning to physically safe robot interaction.
+Main point: give a one-screen map of the lecture right after the title, so students know where each block fits.
 
-Intuition: tell students that the first half answers "how do we generate robot actions?", while the second half asks "how do those actions behave under contact?".
+Intuition: Part I answers "how do we generate robot actions?"; Part II asks "how do those actions behave under contact, and how do we keep them safe?". The case study at the end ties both halves together on real hardware.
 
-Warning: avoid presenting Diffusion Policy as a complete control solution; it still needs a real robot controller underneath.
+Warning: avoid presenting Diffusion Policy as a complete control solution; it still needs a real robot controller underneath. Keep this slide brief — it is a signpost, not content.
 :::
 
 ---

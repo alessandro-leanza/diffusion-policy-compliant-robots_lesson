@@ -23,6 +23,8 @@ execute:
   message: false
 ---
 
+{{< include sections/_00_title.qmd >}}
+
 {{< include sections/_01_motivation.qmd >}}
 
 {{< include sections/_02_imitation_learning.qmd >}}
