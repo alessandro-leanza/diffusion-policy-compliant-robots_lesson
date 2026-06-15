@@ -2,7 +2,7 @@
 
 Two halves: first **how a robot decides what to do**, then **how it acts safely under contact**.
 
-::: {.two-column-balanced}
+::: {.two-column-balanced style="align-items:start; grid-template-columns:1fr 1fr;"}
 ::: {.compact}
 **Part I — Learning to act**
 
@@ -27,81 +27,4 @@ Main point: give a one-screen map of the lecture right after the title, so stude
 Intuition: Part I answers "how do we generate robot actions?"; Part II asks "how do those actions behave under contact, and how do we keep them safe?". The case study at the end ties both halves together on real hardware.
 
 Warning: avoid presenting Diffusion Policy as a complete control solution; it still needs a real robot controller underneath. Keep this slide brief — it is a signpost, not content.
-:::
-
----
-
-## Learning Objectives
-
-By the end of the lecture, students should be able to:
-
-::: {.objective-grid}
-- explain why diffusion-based policies are useful for multimodal robot behavior
-- describe how Diffusion Policy predicts action trajectories
-- connect learned policies with impedance and admittance control concepts
-- reason about latency, safety, and stability constraints in learned robot control
-:::
-
-::: {.notes}
-Main point: set expectations that this is a conceptual and architectural lecture, not a full derivation of every algorithm.
-
-Intuition: students should leave able to read a Diffusion Policy paper and ask control-aware questions about deployment.
-
-Warning: emphasize that "learning objectives" are not implementation promises; detailed code and benchmarks would be separate sessions.
-:::
-
----
-
-## Theme Check: Key Takeaway
-
-::: {.takeaway}
-Diffusion Policy is useful because it models **temporally coherent, multimodal action trajectories**, while compliant control determines how those trajectories interact with contact forces.
-:::
-
-::: {.notes}
-Main point: introduce the central thesis of the lecture in one sentence.
-
-Intuition: use a simple manipulation example: the policy may choose how to insert a peg, but compliance determines whether a small misalignment causes damage or graceful correction.
-
-Warning: do not let students equate multimodality with randomness; the goal is structured alternatives conditioned on the situation.
-:::
-
----
-
-## Theme Check: Large Equation
-
-::: {.equation-card}
-$$
-\mathbf{a}_{t:t+H}
-\sim
-p_\theta\left(
-\mathbf{a}_{t:t+H}
-\mid
-\mathbf{o}_{t-T_o:t}
-\right)
-$$
-:::
-
-<div class="muted small">
-The policy samples a future action chunk conditioned on recent observations.
-</div>
-
-::: {.notes}
-Main point: explain that Diffusion Policy predicts a chunk of future actions, not just the immediate next command.
-
-Intuition: compare it to planning a short phrase rather than one word at a time; the temporal pattern matters.
-
-Warning: clarify that $t$ is robot/control time, while diffusion denoising steps use a separate index later in the lecture.
-:::
-
----
-
-## Lecture Scope
-
-- This deck is a scaffold for a 2.5-hour graduate lecture.
-- Mathematical derivations will stay focused on control and learning intuition.
-
-::: {.figure-placeholder}
-<div class="placeholder-title">Lecture timing diagram</div>
-<div class="placeholder-path">assets/figures/lecture_timing.png</div>
 :::
