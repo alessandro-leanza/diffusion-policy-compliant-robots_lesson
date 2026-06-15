@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="460" viewBox="0 0 1100 460" role="img" aria-labelledby="title desc">
+  <title id="title">How stiffness and damping shape the interaction response</title>
+  <desc id="desc">A virtual mass-spring-damper drives the reference displacement. The damping ratio sets the transient: low damping overshoots and oscillates, critical damping rises smoothly, high damping is sluggish. Stiffness sets how hard the robot resists displacement.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fbff; }
+      .panel { fill: #ffffff; stroke: #d8e2f0; stroke-width: 2; }
+      .base { fill: #e2e8f0; stroke: #94a3b8; stroke-width: 2; }
+      .mass { fill: #dbeafe; stroke: #2563eb; stroke-width: 2.5; }
+      .spring { fill: none; stroke: #2563eb; stroke-width: 3; }
+      .damp { fill: none; stroke: #0891b2; stroke-width: 3; }
+      .axis { stroke: #94a3b8; stroke-width: 2; }
+      .grid { stroke: #e2e8f0; stroke-width: 1.5; stroke-dasharray: 4 4; }
+      .target { stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 6 5; }
+      .under { fill: none; stroke: #dc2626; stroke-width: 3.5; }
+      .crit { fill: none; stroke: #16a34a; stroke-width: 3.5; }
+      .over { fill: none; stroke: #f59e0b; stroke-width: 3.5; }
+      .ttl { font: 700 24px sans-serif; fill: #12213f; }
+      .lab { font: 700 19px sans-serif; fill: #12213f; }
+      .small { font: 500 16px sans-serif; fill: #637083; }
+    </style>
+  </defs>
+  <rect class="bg" width="1100" height="460"/>
+
+  <!-- LEFT: schematic -->
+  <rect class="panel" x="36" y="56" width="360" height="360" rx="6"/>
+  <text class="ttl" x="216" y="96" text-anchor="middle">Virtual M&#8211;K&#8211;D</text>
+  <rect class="base" x="92" y="130" width="24" height="240"/>
+  <!-- spring -->
+  <path class="spring" d="M116 190 L150 172 L180 208 L210 172 L240 208 L270 190"/>
+  <text class="lab" x="193" y="160" text-anchor="middle" fill="#2563eb" style="font:700 19px sans-serif; fill:#2563eb;">K</text>
+  <!-- damper -->
+  <line class="damp" x1="116" y1="300" x2="178" y2="300"/>
+  <rect x="178" y="284" width="40" height="32" fill="#e0f2fe" stroke="#0891b2" stroke-width="2.5"/>
+  <line class="damp" x1="200" y1="300" x2="270" y2="300"/>
+  <text class="lab" x="193" y="346" text-anchor="middle" fill="#0891b2" style="font:700 19px sans-serif; fill:#0891b2;">D = 2&#950;&#8730;(MK)</text>
+  <!-- mass -->
+  <rect class="mass" x="270" y="218" width="70" height="64" rx="4"/>
+  <text class="lab" x="305" y="258" text-anchor="middle">M</text>
+
+  <!-- RIGHT: response plot -->
+  <rect class="panel" x="430" y="56" width="634" height="360" rx="6"/>
+  <text class="ttl" x="747" y="96" text-anchor="middle">Step response of the reference</text>
+  <!-- axes -->
+  <line class="axis" x1="500" y1="370" x2="1030" y2="370"/>
+  <line class="axis" x1="500" y1="370" x2="500" y2="130"/>
+  <text class="small" x="765" y="402" text-anchor="middle">time</text>
+  <text class="small" x="484" y="150" text-anchor="end" transform="rotate(-90 484 150)">&#916;x</text>
+  <!-- target line -->
+  <line class="target" x1="500" y1="160" x2="1030" y2="160"/>
+  <text class="small" x="1024" y="152" text-anchor="end">target</text>
+  <!-- curves -->
+  <path class="under" d="M500,370 C 540,370 556,178 600,128 C 632,92 660,182 690,176 C 718,170 736,150 772,153 C 814,156 870,160 1024,160"/>
+  <path class="crit" d="M500,370 C 565,370 588,168 690,162 C 800,158 910,160 1024,160"/>
+  <path class="over" d="M500,370 C 630,370 700,278 820,206 C 920,168 982,162 1024,161"/>
+  <!-- legend -->
+  <line class="under" x1="528" y1="394" x2="556" y2="394" style="stroke:#dc2626; stroke-width:3.5;"/>
+  <text class="small" x="562" y="399">low &#950; (overshoot)</text>
+  <line class="crit" x1="735" y1="394" x2="763" y2="394" style="stroke:#16a34a; stroke-width:3.5;"/>
+  <text class="small" x="769" y="399">&#950;&#8776;1</text>
+  <line class="over" x1="838" y1="394" x2="866" y2="394" style="stroke:#f59e0b; stroke-width:3.5;"/>
+  <text class="small" x="872" y="399">high &#950; (sluggish)</text>
+</svg>

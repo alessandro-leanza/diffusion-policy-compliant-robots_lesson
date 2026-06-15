@@ -6,7 +6,7 @@
 ::: {.compact}
 - Position commands alone do not specify interaction behavior.
 - The same motion can be safe or unsafe depending on stiffness.
-- Contact-rich manipulation needs motion and mechanical response.
+- Contact-rich manipulation needs motion **and** mechanical response [@villani2016force].
 :::
 
 ![](assets/figures/position_only_limitations.svg){width=100%}
@@ -24,70 +24,136 @@ Warning: do not frame this as "position control is bad"; it is insufficient by i
 
 ## Position, Force, and Compliant Control
 
-- Position control: track desired motion.
-- Force control: regulate interaction force.
-- Compliant control: shape the dynamic relation between force and motion.
+::: {.two-column-balanced}
+::: {.compact}
+- **Position control** — track desired motion. *"Where should I be?"*
+- **Force control** — regulate interaction force. *"How hard should I push?"*
+- **Compliant control** — shape the *relation* between force and motion. *"How should they trade off?"* [@whitney1987force]
+:::
+
+::: {.equation-card}
+$$
+\text{position: } x \to x_{des}
+\qquad
+\text{force: } F \to F_{des}
+$$
+
+$$
+\text{compliance: } F \longleftrightarrow x
+$$
+:::
+:::
 
 ::: {.notes}
 Main point: distinguish the control objectives before introducing impedance and admittance.
 
 Intuition: position asks "where should I be?", force asks "how hard should I push?", compliance asks "how should motion and force relate?".
 
-Warning: real robot controllers often mix these categories, so treat them as conceptual anchors rather than strict boxes.
+Warning: real robot controllers often mix these categories, so treat them as conceptual anchors rather than strict boxes. The historical perspective is Whitney's force-control survey.
 :::
 
 ---
 
 ## Impedance Control Intuition
 
-Impedance control defines how the robot should generate forces in response to motion errors.
-
-Useful mental model:
+::: {.two-column-balanced}
+::: {.compact}
+Impedance defines the **force the robot generates in response to a motion error** [@hogan1985impedance]:
 
 - high stiffness: precise but less forgiving
 - low stiffness: safer but less accurate
-- damping: dissipates energy and smooths response
+- damping: dissipates energy, smooths response
+:::
+
+::: {.equation-card}
+$$
+F = K_d\,\Delta x + D_d\,\Delta\dot{x} + M_d\,\Delta\ddot{x}
+$$
+
+motion error $\Delta x \;\Rightarrow\;$ commanded force $F$
+:::
+:::
 
 ::: {.notes}
-Main point: impedance control shapes the apparent mechanical behavior of the robot.
+Main point: impedance control shapes the apparent mechanical behavior of the robot — it maps a motion error to a force.
 
-Intuition: use the spring-damper analogy: stiffness is how strongly the robot resists displacement, damping is how it resists velocity.
+Intuition: use the spring-damper analogy: stiffness is how strongly the robot resists displacement, damping is how it resists velocity, and the (virtual) mass is how it resists acceleration. This is Hogan's original formulation.
 
-Warning: high stiffness is not automatically better for precision if contact uncertainty creates large forces.
+Warning: high stiffness is not automatically better for precision if contact uncertainty creates large forces. Pure impedance control assumes a torque-controlled, backdrivable robot.
 :::
 
 ---
 
 ## Admittance Control Intuition
 
-Admittance control maps measured external force to a motion correction.
+::: {.two-column-balanced}
+::: {.compact}
+Admittance maps a **measured external force to a motion correction** — the inverse causality.
 
-This is useful when the low-level robot interface accepts position or velocity commands.
+Useful when the low-level interface accepts **position or velocity** commands (as on most industrial arms).
+:::
+
+::: {.equation-card}
+$$
+\Delta x = Y(s)\,F_{ext},
+\qquad
+Y(s) = \frac{1}{M_d s^2 + D_d s + K_d}
+$$
+
+measured force $F_{ext} \;\Rightarrow\;$ motion $\Delta x$
+:::
+:::
 
 ::: {.notes}
 Main point: admittance control converts measured forces into motion commands.
 
 Intuition: if the environment pushes on the robot, the admittance law decides how much the reference should move in response.
 
-Warning: students often invert impedance and admittance; impedance maps motion to force, admittance maps force to motion.
+Warning: students often invert impedance and admittance; impedance maps motion to force, admittance maps force to motion. The next slide makes the duality explicit.
+:::
+
+---
+
+## Impedance vs Admittance: A Duality of Causality
+
+![](assets/figures/impedance_admittance_duality.svg){width=100%}
+
+::: {.compact}
+Same target dynamics, opposite causality — the choice is driven by the **robot interface**, not the task [@ott2010unified].
+:::
+
+::: {.notes}
+Main point: impedance and admittance are two realizations of the *same* desired second-order dynamics; they differ in which variable is the input and which the actuator interface can accept.
+
+Intuition: impedance needs a torque-controlled, backdrivable robot — you command force. Admittance needs a position or velocity interface and a force sensor — you measure force and command motion. Ott, Mukherjee and Nakamura show they can even be blended and switched online.
+
+Why this matters here: our case-study arm (the Doosan) exposes a velocity command interface and has a wrist force sensor, so it is naturally an *admittance*-controlled system. That is the direct reason the next section builds a variable-admittance controller rather than an impedance one.
 :::
 
 ---
 
 ## Mass-Spring-Damper Equation
 
-A common admittance model is:
+::: {.two-column-balanced}
+::: {.compact}
+A common admittance model:
 
 $$
 M_d \Delta\ddot{x}_r + D_d \Delta\dot{x}_r + K_d \Delta x_r = F_{ext}
 $$
 
-where $M_d$, $D_d$, and $K_d$ are desired mass, damping, and stiffness, and $\Delta x_r$ is the force-induced reference displacement.
+The controller **simulates** how a virtual mass-spring-damper would move under the measured force.
+
+Damping is usually derived from a **damping ratio**: $D_d = 2\zeta\sqrt{M_d K_d}$.
+:::
+
+![](assets/figures/msd_step_response.svg){width=100%}
+:::
 
 ::: {.notes}
 Main point: present the admittance equation as a desired dynamic relation, not a literal physical mass-spring-damper attached to the robot.
 
-Intuition: the controller simulates how a virtual mass, damper, and spring would move under the measured external force.
+Intuition: the controller simulates how a virtual mass, damper, and spring would move under the measured external force. The figure shows the consequence: the damping ratio zeta sets the transient — too little and the reference overshoots and oscillates, around one it rises cleanly, too much and it is sluggish. Tying damping to zeta (rather than treating D as free) keeps the system well-damped as stiffness changes, which is exactly the parameterization the case study uses.
 
 Warning: choosing gains poorly can produce unstable or sluggish interaction, especially with delays and noisy force sensing.
 :::
@@ -96,38 +162,62 @@ Warning: choosing gains poorly can produce unstable or sluggish interaction, esp
 
 ## Variable Stiffness and Damping
 
-Instead of fixed gains, the controller can adapt:
+::: {.two-column-balanced}
+::: {.compact}
+Instead of fixed gains, adapt them to task phase and observations [@buchli2011learning; @abudakka2020variable]:
 
 $$
 K_d = K_d(t, o_t),
 \qquad
-D_d = D_d(t, o_t)
+\zeta = \zeta(t, o_t)
 $$
 
-This creates task-dependent compliance.
+- approach **stiff** in free space
+- go **compliant** near contact
+- this is *task-dependent compliance*
+:::
+
+::: {.takeaway}
+A learned policy can output $(K_d, \zeta)$ as part of its action — exactly the bridge to the next section.
+:::
+:::
 
 ::: {.notes}
-Main point: variable gains allow the robot to be stiff or compliant depending on task phase and observations.
+Main point: variable gains allow the robot to be stiff or compliant depending on task phase and observations. There is a whole line of work on learning these gains — Buchli et al. introduced learning variable impedance, and Abu-Dakka and Saveriano survey the modern landscape.
 
 Intuition: during insertion, the robot may approach stiffly in free space and become more compliant near contact.
 
-Warning: changing gains online is powerful but risky; abrupt or unconstrained gain changes can destabilize behavior.
+Warning: changing gains online is powerful but risky; abrupt or unconstrained gain changes can destabilize behavior. This is the motivation for the safety guardrails on the next slide and the bounded learned gains in the case study.
 :::
 
 ---
 
 ## Stability and Safety Intuition
 
-- Learned parameters must remain within safe bounds.
+::: {.two-column-balanced}
+::: {.compact}
+- Learned parameters must stay within **safe bounds**.
 - Fast changes in stiffness or damping can destabilize interaction.
-- Passivity and energy-based reasoning provide useful guardrails.
+- **Passivity** / energy-based reasoning gives guardrails: keep stored energy bounded so the controller cannot inject energy into contact.
 
-![](assets/figures/compliance_safety_bounds.svg){width=70%}
+$$
+K_{min} \preceq K_d \preceq K_{max},
+\qquad
+\dot{V} \le F_{ext}^\top \dot{x}
+$$
+:::
+
+![](assets/figures/compliance_safety_bounds.svg){width=100%}
+:::
+
+::: {.takeaway}
+A network can *propose* gains; a safety filter must *enforce* ranges, rate limits, and energy bounds before execution.
+:::
 
 ::: {.notes}
 Main point: learned control parameters must be constrained by safety and stability reasoning.
 
-Intuition: a neural network can propose gains, but a safety filter should enforce allowed ranges and rate limits.
+Intuition: a neural network can propose gains, but a safety filter should enforce allowed ranges and rate limits. The passivity condition — the controller's stored energy never grows faster than the mechanical power the environment supplies — is the energy-based version of the same guardrail.
 
-Warning: empirical success is not the same as stability; contact tasks need conservative deployment assumptions.
+Warning: empirical success is not the same as stability; contact tasks need conservative deployment assumptions. The case study turns this slide into concrete clipping, force-saturation, and impact-latch behaviors.
 :::
