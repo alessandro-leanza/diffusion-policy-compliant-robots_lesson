@@ -426,35 +426,3 @@ The first equation is exactly the $\hat{x}_0$ readout implied by the closed-form
 
 When $\sigma_k = 0$ the whole trajectory is determined by the initial noise and the network outputs, so we can take large steps and still land on a coherent sample. This is the main reason DDIM-style samplers appear in real-time diffusion policies, where each denoising step costs one network evaluation [@song2021ddim].
 :::
-
----
-
-## DDPM vs DDIM
-
-::: {.two-column-balanced}
-::: {.compact}
-**DDPM**
-
-- stochastic reverse process
-- many small denoising steps
-- conceptually close to the probabilistic derivation
-
-**DDIM**
-
-- deterministic or partially stochastic updates
-- fewer denoising steps
-- attractive for real-time policy inference
-:::
-
-::: {}
-![](assets/figures/ddpm_ddim_comparison.svg){width=100%}
-:::
-:::
-
-::: {.notes}
-Main point: distinguish DDPM and DDIM in terms of sampling behavior and control relevance.
-
-DDPM sampling adds stochasticity at reverse steps. DDIM constructs a non-Markovian reverse trajectory that can skip many intermediate timesteps while preserving the same training objective.
-
-For robotics, the practical question is not only sample quality. It is whether the sampled action chunk is good enough, stable enough, and fast enough for closed-loop deployment.
-:::
