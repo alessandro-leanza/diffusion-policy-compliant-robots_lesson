@@ -38,7 +38,18 @@ async function getTab() {
   while (Date.now() < deadline) {
     try {
       const tabs = await getJson(`http://127.0.0.1:${port}/json`);
-      const tab = tabs.find((candidate) => candidate.type === "page") || tabs[0];
+      const tab =
+        tabs.find(
+          (candidate) =>
+            candidate.type === "page" &&
+            !candidate.url.startsWith("chrome-extension://") &&
+            candidate.url.includes("slides.html"),
+        ) ||
+        tabs.find(
+          (candidate) =>
+            candidate.type === "page" &&
+            !candidate.url.startsWith("chrome-extension://"),
+        );
       if (tab?.webSocketDebuggerUrl) {
         return tab;
       }
@@ -60,8 +71,14 @@ async function main() {
   socket.onmessage = (event) => {
     const message = JSON.parse(event.data);
     if (message.id && pending.has(message.id)) {
-      pending.get(message.id)(message);
+      const { resolve, reject, timer } = pending.get(message.id);
+      clearTimeout(timer);
       pending.delete(message.id);
+      if (message.error) {
+        reject(new Error(`${message.id} failed: ${JSON.stringify(message.error)}`));
+      } else {
+        resolve(message);
+      }
     }
   };
 
@@ -70,9 +87,17 @@ async function main() {
   });
 
   function send(method, params = {}) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const messageId = ++id;
-      pending.set(messageId, resolve);
+      const timer = setTimeout(() => {
+        pending.delete(messageId);
+        reject(new Error(`${method} timed out`));
+      }, 300000);
+      pending.set(messageId, {
+        resolve,
+        reject: (error) => reject(new Error(`${method} ${error.message}`)),
+        timer,
+      });
       socket.send(JSON.stringify({ id: messageId, method, params }));
     });
   }
@@ -168,7 +193,25 @@ async function main() {
     preferCSSPageSize: true,
   });
 
-  fs.writeFileSync(outputPath, Buffer.from(pdf.result.data, "base64"));
+  if (pdf.result.data) {
+    fs.writeFileSync(outputPath, Buffer.from(pdf.result.data, "base64"));
+  } else if (pdf.result.stream) {
+    const chunks = [];
+    while (true) {
+      const chunk = await send("IO.read", { handle: pdf.result.stream });
+      if (chunk.result.data) {
+        chunks.push(Buffer.from(chunk.result.data, chunk.result.base64Encoded ? "base64" : "utf8"));
+      }
+      if (chunk.result.eof) {
+        break;
+      }
+    }
+    await send("IO.close", { handle: pdf.result.stream });
+    fs.writeFileSync(outputPath, Buffer.concat(chunks));
+  } else {
+    throw new Error("Chrome did not return PDF data or a PDF stream");
+  }
+
   socket.close();
 }
 

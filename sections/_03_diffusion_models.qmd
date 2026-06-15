@@ -31,6 +31,24 @@ Warning: this does not mean the semantics are irrelevant for the whole system. S
 
 ---
 
+## Data as Tensors
+
+![](assets/photos/chaos2clarity_input_data_modalities.png){width=96% fig-align="center"}
+
+::: {.takeaway}
+The same generative objective can be applied to images, videos, and robot trajectories once they are represented as high-dimensional arrays.
+:::
+
+::: {.notes}
+Main point: make the tensor abstraction concrete before introducing the diffusion equations.
+
+The slide before this one gives the abstract statement: diffusion models operate on tensors. This visual makes the statement less abstract. An image has height, width, and color channels; a video adds a time axis; a robot trajectory adds a sequence axis and action or configuration dimensions.
+
+For the rest of the lecture, this is the bridge from image diffusion to policy diffusion. We are going to reuse the same noising and denoising machinery, but the object being generated will become an action chunk rather than an image.
+:::
+
+---
+
 ## Diffusion as Distribution Learning
 
 Generation means sampling a structured object:
@@ -63,7 +81,7 @@ This framing will later become a policy: instead of sampling an unconditional ob
 
 ::: {.two-column-balanced}
 ::: {.compact}
-The forward process is fixed:
+**Forward process:** fixed Gaussian corruption
 
 $$
 q(x_k \mid x_{k-1})
@@ -75,27 +93,32 @@ x_k;
 \beta_k I
 \right)
 $$
+:::
 
-The reverse process is learned:
+::: {.compact}
+**Reverse process:** learned conditional denoising
 
 $$
 p_\theta(x_{k-1} \mid x_k, c)
 $$
+
+- Forward: progressively destroy structure.
+- Reverse: reconstruct structure step by step.
+:::
 :::
 
-::: {}
-![](assets/figures/diffusion_forward_reverse.svg){width=100%}
-:::
+![](assets/photos/chaos2clarity_diffusion_forward_reverse.png){width=96% fig-align="center"}
+
+::: {.takeaway}
+In Diffusion Policy, the same picture applies in **action-chunk space** instead of pixel space.
 :::
 
 ::: {.notes}
-Main point: separate the fixed corruption process from the learned denoising process.
+Main point: separate the fixed corruption process from the learned denoising process, and make the direction of the two processes visually obvious.
 
 The forward process is not learned. We choose a schedule of noise variances and progressively corrupt the data. The reverse process is learned because the true reverse conditional depends on the unknown data distribution.
 
-I use $k$ for diffusion time. This is not robot time. Robot time indexes physical execution, while diffusion time indexes the artificial denoising loop used by the generative model.
-
-The conditioning variable $c$ will later be the robot observation history: images, proprioception, force signals, or task context.
+I use $k$ for diffusion time. This is not robot time. Robot time indexes physical execution, while diffusion time indexes the artificial denoising loop used by the generative model. For image diffusion, we can see the corruption directly. For robot actions, the samples are vectors or trajectories, so the visual intuition is less obvious, but the math is the same: a clean expert action chunk is corrupted during training, and the model learns how to remove the artificial noise.
 :::
 
 ---
@@ -186,6 +209,34 @@ Main point: the model learns to estimate the noise component added during the fo
 Once the model can estimate the noise in $x_k$, we can use that estimate to move the sample toward a cleaner point. The same loss is used whether $x$ is an image tensor or an action trajectory tensor.
 
 There are other parameterizations, such as predicting $x_0$ or a velocity variable, but noise prediction is the standard formulation to introduce here.
+:::
+
+---
+
+## What the Denoiser Learns
+
+::: {.two-column-balanced}
+::: {.compact}
+- The network sees a noisy sample and a diffusion step.
+- It predicts the noise component that should be removed.
+- Conditioning $c$ tells the network which sample is relevant for the current context.
+
+$$
+\epsilon_\theta(x_k, k, c)
+$$
+:::
+
+::: {}
+![](assets/photos/chaos2clarity_trained_denoiser_cartoon.png){width=100%}
+:::
+:::
+
+::: {.notes}
+Main point: connect the loss to a concrete neural-network computation.
+
+The denoiser is not a generic image classifier. It is trained to answer a very specific question: given this noisy sample, at this diffusion step, and under this conditioning context, what noise was added?
+
+At inference time, the answer is used to update the sample toward a cleaner one. In Diffusion Policy, the same denoiser operates on action trajectories rather than pixels, and the conditioning is the robot observation history.
 :::
 
 ---

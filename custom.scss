@@ -521,6 +521,22 @@ $code-block-border-color: #d8e2f0;
   border-bottom: 0;
 }
 
+.references-grid {
+  column-gap: 1.4em;
+  display: grid;
+  font-size: 0.54em;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  line-height: 1.18;
+}
+
+.references-grid ul {
+  margin-bottom: 0;
+}
+
+.references-grid li {
+  margin-bottom: 0.3em;
+}
+
 .roadmap li::before {
   color: var(--lecture-accent);
   content: counter(roadmap, decimal-leading-zero);

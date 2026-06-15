@@ -54,34 +54,41 @@ Warning: keep the discussion grounded in robot constraints, not only machine-lea
 
 ## References
 
-::: {.small}
+::: {.references-grid}
+::: {}
 - Abu-Dakka, F. J., & Saveriano, M. (2020). Variable Impedance Control and Learning — A Review. *Frontiers in Robotics and AI*, 7, 590681.
 - Bacciu, D. *Imitation Learning*. Lecture material, Università di Pisa.
 - Bishop, C. M. (1994). *Mixture Density Networks*. Tech. Report NCRG/94/004, Aston University.
 - Buchli, J., Stulp, F., Theodorou, E., & Schaal, S. (2011). Learning Variable Impedance Control. *Int. J. Robotics Research*, 30(7), 820–833.
 - Chi, C., Xu, Z., Feng, S., et al. (2025). Diffusion Policy: Visuomotor Policy Learning via Action Diffusion. *Int. J. Robotics Research*, 44(10–11), 1684–1704.
 - Ho, J., Jain, A., & Abbeel, P. (2020). Denoising Diffusion Probabilistic Models. *NeurIPS*, 33, 6840–6851.
+- Hogan, N. (1985). Impedance Control: An Approach to Manipulation, Parts I–III. *J. Dynamic Systems, Measurement, and Control*, 107(1), 1–24.
 :::
 
----
-
-## References (cont.)
-
-::: {.small}
-- Hogan, N. (1985). Impedance Control: An Approach to Manipulation, Parts I–III. *J. Dynamic Systems, Measurement, and Control*, 107(1), 1–24.
+::: {}
 - Ott, C., Mukherjee, R., & Nakamura, Y. (2010). Unified Impedance and Admittance Control. *IEEE ICRA*, 554–561.
 - Pomerleau, D. A. (1988). ALVINN: An Autonomous Land Vehicle in a Neural Network. *NeurIPS*, 1, 305–313.
 - Pomponi, V. (2026). *Generative AI with Diffusion: An Introduction to Diffusion Models*. Lecture material, SUPSI / Politecnico di Milano.
 - Ross, S., & Bagnell, D. (2010). Efficient Reductions for Imitation Learning. *AISTATS*, 661–668.
 - Ross, S., Gordon, G. J., & Bagnell, J. A. (2011). A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning. *AISTATS*, 627–635.
+- Song, J., Meng, C., & Ermon, S. (2021). Denoising Diffusion Implicit Models. *ICLR*.
+- Villani, L., & De Schutter, J. (2016). Force Control. In *Springer Handbook of Robotics* (2nd ed., pp. 195–220). Springer.
+- Whitney, D. E. (1987). Historical Perspective and State of the Art in Robot Force Control. *Int. J. Robotics Research*, 6(1), 3–14.
+:::
 :::
 
 ---
 
-## References (cont.)
+## Thank You for Your Attention
 
-::: {.small}
-- Song, J., Meng, C., & Ermon, S. (2021). Denoising Diffusion Implicit Models. *ICLR*.
-- Villani, L., & De Schutter, J. (2016). Force Control. In *Springer Handbook of Robotics* (2nd ed., pp. 195–220). Springer.
-- Whitney, D. E. (1987). Historical Perspective and State of the Art in Robot Force Control. *Int. J. Robotics Research*, 6(1), 3–14.
+::: {.equation-card}
+**Alessandro Leanza**
+
+alessandro.leanza@supsi.ch
+
+github.com/alessandro-leanza
+:::
+
+::: {.notes}
+Close the lecture and leave contact details visible for questions, follow-up, and repository access.
 :::

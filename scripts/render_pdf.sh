@@ -20,6 +20,7 @@ fi
 
 devtools_port="${CHROME_DEVTOOLS_PORT:-9224}"
 chrome_user_data_dir="$(mktemp -d "${TMPDIR:-/tmp}/dpcr-chrome-pdf.XXXXXX")"
+pdf_page_dir="$(mktemp -d "${TMPDIR:-/tmp}/dpcr-pdf-pages.XXXXXX")"
 
 "$chrome_bin" \
   --headless=new \
@@ -33,6 +34,22 @@ chrome_user_data_dir="$(mktemp -d "${TMPDIR:-/tmp}/dpcr-chrome-pdf.XXXXXX")"
   "file://$project_dir/slides.html?print-pdf" >/tmp/dpcr-chrome-pdf.log 2>&1 &
 
 chrome_pid="$!"
-trap 'kill "$chrome_pid" >/dev/null 2>&1 || true; wait "$chrome_pid" 2>/dev/null || true; rm -rf "$chrome_user_data_dir" >/dev/null 2>&1 || true' EXIT
+trap 'kill "$chrome_pid" >/dev/null 2>&1 || true; wait "$chrome_pid" 2>/dev/null || true; rm -rf "$chrome_user_data_dir" "$pdf_page_dir" >/dev/null 2>&1 || true' EXIT
 
-node "$project_dir/scripts/print_pdf_after_mathjax.js" "$devtools_port" "$project_dir/slides.pdf"
+node "$project_dir/scripts/capture_pdf_pages.js" "$devtools_port" "$pdf_page_dir"
+
+python3 - "$pdf_page_dir" "$project_dir/slides.pdf" <<'PY'
+from pathlib import Path
+from PIL import Image
+import sys
+
+page_dir = Path(sys.argv[1])
+output_path = Path(sys.argv[2])
+page_files = sorted(page_dir.glob("page-*.png"))
+
+if len(page_files) <= 1:
+    raise SystemExit(f"Expected multiple captured pages, got {len(page_files)}")
+
+images = [Image.open(path).convert("RGB") for path in page_files]
+images[0].save(output_path, save_all=True, append_images=images[1:], resolution=144.0)
+PY
