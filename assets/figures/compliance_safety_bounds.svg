@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" role="img" aria-labelledby="title desc">
+  <title id="title">Admissible envelope for learned compliance gains</title>
+  <desc id="desc">Stiffness and damping predicted by the policy are clipped or projected into a bounded admissible region before reaching the controller.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#dc2626"/>
+    </marker>
+    <marker id="axhead" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#637083"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fbff; }
+      .axis { stroke: #637083; stroke-width: 2.5; fill: none; marker-end: url(#axhead); }
+      .admit { fill: #ecfdf5; stroke: #16a34a; stroke-width: 2.5; }
+      .guide { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 5 5; fill: none; }
+      .proj { stroke: #dc2626; stroke-width: 3; fill: none; stroke-dasharray: 7 5; marker-end: url(#arrow); }
+      .label { font: 700 22px sans-serif; fill: #12213f; }
+      .body { font: 500 19px sans-serif; fill: #1f2937; }
+      .small { font: 500 16px sans-serif; fill: #637083; }
+      .red { fill: #dc2626; }
+      .green { fill: #16a34a; }
+    </style>
+  </defs>
+  <rect class="bg" width="900" height="560"/>
+
+  <text class="label" x="450" y="44" text-anchor="middle">Learned gains projected into a safe envelope</text>
+
+  <!-- axes -->
+  <path class="axis" d="M120 470 L840 470"/>
+  <path class="axis" d="M120 470 L120 80"/>
+  <text class="body" x="830" y="505" text-anchor="end">stiffness K</text>
+  <text class="body" x="100" y="92" text-anchor="end" transform="rotate(-90 100 92)">damping D</text>
+
+  <!-- admissible region -->
+  <rect class="admit" x="270" y="190" width="370" height="210"/>
+  <text class="body" x="455" y="226" text-anchor="middle" fill="#16a34a">admissible</text>
+
+  <!-- bound guides + labels -->
+  <line class="guide" x1="270" y1="470" x2="270" y2="190"/>
+  <line class="guide" x1="640" y1="470" x2="640" y2="190"/>
+  <line class="guide" x1="120" y1="400" x2="270" y2="400"/>
+  <line class="guide" x1="120" y1="190" x2="270" y2="190"/>
+  <text class="small" x="270" y="494" text-anchor="middle">K_min</text>
+  <text class="small" x="640" y="494" text-anchor="middle">K_max</text>
+  <text class="small" x="110" y="406" text-anchor="end">D_min</text>
+  <text class="small" x="110" y="196" text-anchor="end">D_max</text>
+
+  <!-- in-bounds point -->
+  <circle class="green" cx="470" cy="300" r="9"/>
+  <text class="small" x="470" y="338" text-anchor="middle" fill="#16a34a">accepted</text>
+
+  <!-- out-of-bounds point + projection -->
+  <circle class="red" cx="760" cy="130" r="9"/>
+  <text class="small" x="760" y="118" text-anchor="middle" fill="#dc2626">predicted gains</text>
+  <path class="proj" d="M752 137 L648 187"/>
+  <text class="small" x="690" y="430" text-anchor="middle">clipped to bound</text>
+</svg>

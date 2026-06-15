@@ -161,10 +161,7 @@ Here is the concrete answer to the earlier question — "should the policy outpu
 - Short **observation history** (last 2 frames) → predict next action chunk.
 :::
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Vision + force + state → encoder → policy</div>
-<div class="placeholder-path">TODO assets/figures/dp_conditioning.svg</div>
-:::
+![](assets/figures/dp_conditioning.svg){width=100%}
 :::
 
 - Force feedback lets the policy *react to contact*, not just to pixels.

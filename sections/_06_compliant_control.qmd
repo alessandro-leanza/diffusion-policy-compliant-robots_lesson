@@ -9,10 +9,7 @@
 - Contact-rich manipulation needs motion and mechanical response.
 :::
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Position command under contact</div>
-<div class="placeholder-path">assets/figures/position_only_limitations.png</div>
-:::
+![](assets/figures/position_only_limitations.svg){width=100%}
 :::
 
 ::: {.notes}
@@ -125,10 +122,7 @@ Warning: changing gains online is powerful but risky; abrupt or unconstrained ga
 - Fast changes in stiffness or damping can destabilize interaction.
 - Passivity and energy-based reasoning provide useful guardrails.
 
-::: {.figure-placeholder}
-<div class="placeholder-title">Compliance safety envelope</div>
-<div class="placeholder-path">assets/figures/compliance_safety_bounds.png</div>
-:::
+![](assets/figures/compliance_safety_bounds.svg){width=70%}
 
 ::: {.notes}
 Main point: learned control parameters must be constrained by safety and stability reasoning.

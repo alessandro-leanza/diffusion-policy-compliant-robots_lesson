@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="480" viewBox="0 0 1100 480" role="img" aria-labelledby="title desc">
+  <title id="title">The same position command is safe or unsafe depending on stiffness</title>
+  <desc id="desc">Two panels reach the same commanded target against a surface; high stiffness produces a large contact force while low stiffness yields safely.</desc>
+  <defs>
+    <marker id="ar" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#dc2626"/>
+    </marker>
+    <marker id="ag" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#16a34a"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fbff; }
+      .panel { fill: #ffffff; stroke: #d8e2f0; stroke-width: 2; }
+      .base { fill: #e2e8f0; stroke: #94a3b8; stroke-width: 2; }
+      .wall { fill: #cbd5e1; stroke: #64748b; stroke-width: 2; }
+      .ee { fill: #dbeafe; stroke: #2563eb; stroke-width: 2; }
+      .spring { fill: none; stroke: #2563eb; stroke-width: 3; }
+      .des { stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 6 5; }
+      .fred { stroke: #dc2626; stroke-width: 7; fill: none; marker-end: url(#ar); }
+      .fgreen { stroke: #16a34a; stroke-width: 4; fill: none; marker-end: url(#ag); }
+      .label { font: 700 23px sans-serif; fill: #12213f; }
+      .small { font: 500 17px sans-serif; fill: #637083; }
+      .red { font: 700 18px sans-serif; fill: #dc2626; }
+      .green { font: 700 18px sans-serif; fill: #16a34a; }
+    </style>
+  </defs>
+  <rect class="bg" width="1100" height="480"/>
+
+  <!-- LEFT panel: high stiffness -->
+  <rect class="panel" x="40" y="70" width="490" height="320"/>
+  <text class="label" x="285" y="112" text-anchor="middle">High stiffness K</text>
+  <rect class="base" x="70" y="180" width="24" height="150"/>
+  <!-- tight spring -->
+  <path class="spring" d="M94 255 L114 232 L134 278 L154 232 L174 278 L194 232 L214 278 L234 232 L254 278 L274 232 L294 255"/>
+  <rect class="ee" x="294" y="225" width="70" height="60"/>
+  <rect class="wall" x="430" y="150" width="26" height="190"/>
+  <line class="des" x1="478" y1="150" x2="478" y2="340"/>
+  <text class="small" x="478" y="364" text-anchor="middle">x_des</text>
+  <path class="fred" d="M366 255 L426 255"/>
+  <text class="red" x="395" y="300" text-anchor="middle">F large</text>
+  <text class="small" x="285" y="372" text-anchor="middle">rigid — large contact force, unsafe</text>
+
+  <!-- RIGHT panel: low stiffness -->
+  <rect class="panel" x="570" y="70" width="490" height="320"/>
+  <text class="label" x="815" y="112" text-anchor="middle">Low stiffness K</text>
+  <rect class="base" x="600" y="180" width="24" height="150"/>
+  <!-- loose spring -->
+  <path class="spring" d="M624 255 L664 232 L704 278 L744 232 L784 278 L808 255"/>
+  <rect class="ee" x="808" y="225" width="70" height="60"/>
+  <rect class="wall" x="960" y="150" width="26" height="190"/>
+  <line class="des" x1="1008" y1="150" x2="1008" y2="340"/>
+  <text class="small" x="1008" y="364" text-anchor="middle">x_des</text>
+  <path class="fgreen" d="M880 255 L952 255"/>
+  <text class="green" x="916" y="300" text-anchor="middle">F small</text>
+  <text class="small" x="815" y="372" text-anchor="middle">yields — safe, less precise</text>
+
+  <text class="small" x="550" y="438" text-anchor="middle">Same commanded position x_des — the mechanical response depends on stiffness, not on the position command alone</text>
+</svg>

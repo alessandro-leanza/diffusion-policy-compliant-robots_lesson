@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520" role="img" aria-labelledby="title desc">
+  <title id="title">Multimodal conditioning of the diffusion policy</title>
+  <desc id="desc">RGB image, wrench, and proprioceptive state are encoded and concatenated to condition a diffusion policy that predicts the next action chunk.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#2563eb"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fbff; }
+      .box { fill: #ffffff; stroke: #d8e2f0; stroke-width: 2; }
+      .blue { fill: #dbeafe; stroke: #2563eb; stroke-width: 2; }
+      .teal { fill: #e0f2fe; stroke: #0891b2; stroke-width: 2; }
+      .amber { fill: #fffbeb; stroke: #f59e0b; stroke-width: 2; }
+      .green { fill: #ecfdf5; stroke: #16a34a; stroke-width: 2; }
+      .line { stroke: #2563eb; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .label { font: 700 23px sans-serif; fill: #12213f; }
+      .body { font: 500 19px sans-serif; fill: #1f2937; }
+      .small { font: 500 16px sans-serif; fill: #637083; }
+      .mono { font: 700 20px monospace; fill: #12213f; }
+    </style>
+  </defs>
+  <rect class="bg" width="1120" height="520"/>
+
+  <!-- modality boxes -->
+  <rect class="box blue" x="40" y="60" width="250" height="110"/>
+  <text class="label" x="165" y="100" text-anchor="middle">RGB image</text>
+  <text class="mono"  x="165" y="132" text-anchor="middle">84 × 84</text>
+  <text class="small" x="165" y="158" text-anchor="middle">wrist + third-person cams</text>
+
+  <rect class="box amber" x="40" y="200" width="250" height="110"/>
+  <text class="label" x="165" y="240" text-anchor="middle">Wrench</text>
+  <text class="mono"  x="165" y="272" text-anchor="middle">6-D F/T</text>
+  <text class="small" x="165" y="298" text-anchor="middle">Bota wrist sensor</text>
+
+  <rect class="box teal" x="40" y="340" width="250" height="110"/>
+  <text class="label" x="165" y="380" text-anchor="middle">Proprioception</text>
+  <text class="mono"  x="165" y="412" text-anchor="middle">12-D</text>
+  <text class="small" x="165" y="438" text-anchor="middle">TCP pose + hand joints</text>
+
+  <!-- encoder -->
+  <rect class="box green" x="430" y="60" width="290" height="390"/>
+  <text class="label" x="575" y="100" text-anchor="middle">Observation encoder</text>
+  <rect class="box" x="460" y="130" width="230" height="80"/>
+  <text class="body" x="575" y="162" text-anchor="middle">ResNet-18 +</text>
+  <text class="body" x="575" y="188" text-anchor="middle">spatial-softmax</text>
+  <rect class="box" x="460" y="240" width="230" height="80"/>
+  <text class="body" x="575" y="272" text-anchor="middle">low-dim concat</text>
+  <text class="small" x="575" y="300" text-anchor="middle">(wrench + state)</text>
+  <text class="small" x="575" y="372" text-anchor="middle">history: last 2 frames</text>
+  <text class="mono"  x="575" y="412" text-anchor="middle">→ o_t</text>
+
+  <!-- policy -->
+  <rect class="box blue" x="800" y="150" width="280" height="210"/>
+  <text class="label" x="940" y="208" text-anchor="middle">Diffusion Policy</text>
+  <text class="mono"  x="940" y="252" text-anchor="middle">p_θ(a | o)</text>
+  <text class="small" x="940" y="296" text-anchor="middle">predicts next</text>
+  <text class="small" x="940" y="320" text-anchor="middle">action chunk</text>
+
+  <!-- arrows -->
+  <path class="line" d="M290 115 L430 150"/>
+  <path class="line" d="M290 255 L430 255"/>
+  <path class="line" d="M290 395 L430 360"/>
+  <path class="line" d="M720 255 L800 255"/>
+
+  <text class="small" x="940" y="408" text-anchor="middle">→ Δpose, K, ζ, hand</text>
+</svg>
