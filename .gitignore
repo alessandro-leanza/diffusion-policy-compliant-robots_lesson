@@ -10,9 +10,14 @@ __pycache__/
 practice/data/
 practice/pusht_results/
 practice/*_results/
-# Instructor-only teaching notes (kept local, not for students)
+# notebook 06 runtime downloads/outputs
+practice/*.zarr.zip
+practice/*.ckpt
+practice/vis.mp4
+# Instructor-only files (kept local, not for students)
 practice/practice_notes.tex
 practice/practice_notes.pdf
+practice/train_pusht_long.py
 practice/*.aux
 practice/*.toc
 practice/*.out

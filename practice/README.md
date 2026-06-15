@@ -25,6 +25,12 @@ matplotlib, Pillow and tqdm.
 | 03 | `03_training_pipeline.ipynb` | Full DDPM trained on MNIST | MNIST (auto-download) |
 | 04 | `04_architectures.ipynb` | U-Net, +attention, 1D U-Net, DiT (forward pass + benchmark) | none |
 | 05 | `05_diffusion_policy_pusht.ipynb` | Diffusion Policy on the real Push-T dataset | Push-T (~31 MB, auto-download) |
+| 06 | `06_pusht_rollout.ipynb` | Pretrained Diffusion Policy controlling Push-T in closed loop — renders a **video** | Push-T + checkpoint (auto-download) |
+
+Notebook 06 loads a **pretrained** policy (no training) and renders a rollout
+video in a couple of minutes — it is the visual payoff of the session. It needs
+a GPU runtime and installs a few extra packages (the Push-T physics env) in its
+Setup cell.
 
 Notebooks 01, 02 and 04 run in seconds. Notebooks 03 and 05 include a training
 loop that runs for several minutes on a Colab T4 — that is expected; you can
