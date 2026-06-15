@@ -15,6 +15,7 @@ format:
     height: 900
     smaller: true
 bibliography: references.bib
+suppress-bibliography: true
 include-after-body: scripts/reveal_title_footer.html
 html-math-method: mathml
 execute:
