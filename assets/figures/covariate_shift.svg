@@ -30,7 +30,7 @@
   <text x="395" y="145" text-anchor="middle" class="small">states covered by demonstrations</text>
 
   <ellipse cx="670" cy="345" rx="150" ry="65" class="badcloud"/>
-  <text x="670" y="358" text-anchor="middle" class="small">unseen states</text>
+  <text x="690" y="405" text-anchor="middle" class="small">unseen states</text>
 
   <path d="M125 310 C235 265, 350 240, 480 220 C585 203, 665 197, 765 180" class="expert"/>
   <path d="M125 310 C235 265, 340 252, 445 255 C540 260, 590 310, 710 360" class="policy"/>
@@ -39,7 +39,7 @@
   <circle cx="445" cy="255" r="10" class="orange"/>
   <circle cx="710" cy="360" r="10" class="orange"/>
 
-  <text x="250" y="250" class="label blue">expert rollout</text>
-  <text x="530" y="300" class="label orange">policy drift</text>
+  <text x="250" y="215" class="label blue">expert rollout</text>
+  <text x="610" y="292" class="label orange">policy drift</text>
   <text x="430" y="485" text-anchor="middle" class="small">training distribution and deployment distribution can differ</text>
 </svg>

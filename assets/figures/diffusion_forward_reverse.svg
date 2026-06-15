@@ -53,8 +53,8 @@
   </g>
 
   <path class="fwd" d="M130 350 C250 395, 445 395, 560 350"/>
-  <text class="label" x="345" y="420" text-anchor="middle">fixed forward process q(xk | x0)</text>
-  <text class="eq" x="345" y="452" text-anchor="middle">xk = sqrt(a_bar_k) x0 + sqrt(1 - a_bar_k) eps</text>
+  <text class="label" x="345" y="410" text-anchor="middle">fixed forward process q(xk | x0)</text>
+  <text class="eq" x="345" y="440" text-anchor="middle">xk = sqrt(a_bar_k) x0 + sqrt(1 - a_bar_k) eps</text>
 
   <g transform="translate(740,90)">
     <rect class="panel" width="315" height="230"/>
@@ -67,5 +67,5 @@
   </g>
 
   <path class="rev" d="M790 350 C700 395, 615 395, 525 350"/>
-  <text class="label" x="685" y="452" text-anchor="middle">sampling: xK -> ... -> x0</text>
+  <text class="label" x="685" y="488" text-anchor="middle">sampling: xK -> ... -> x0</text>
 </svg>

@@ -37,7 +37,7 @@
   <text class="small" x="715" y="296" text-anchor="middle">t</text>
   <text class="small" x="985" y="296" text-anchor="middle">t+15</text>
   <line class="axis" x1="715" y1="240" x2="715" y2="280"/>
-  <text class="label" x="715" y="225" text-anchor="middle">now</text>
+  <text class="small" x="715" y="230" text-anchor="middle">now</text>
 
   <rect class="obs" x="570" y="150" width="58" height="70"/>
   <rect class="obs" x="635" y="150" width="58" height="70"/>

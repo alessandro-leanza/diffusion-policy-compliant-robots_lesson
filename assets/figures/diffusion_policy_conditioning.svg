@@ -57,5 +57,6 @@
   <path class="line" d="M595 214 L675 265"/>
   <path class="line" d="M595 445 L675 445"/>
 
-  <text class="small" x="838" y="535" text-anchor="middle">training target: predict the Gaussian noise added to expert actions</text>
+  <text class="small" x="838" y="530" text-anchor="middle">training target: predict Gaussian noise</text>
+  <text class="small" x="838" y="552" text-anchor="middle">added to expert actions</text>
 </svg>

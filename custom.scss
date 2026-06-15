@@ -42,7 +42,8 @@ $code-block-border-color: #d8e2f0;
   box-sizing: border-box;
 }
 
-.reveal .slides > section.stack.present {
+.reveal .slides > section.stack.present,
+.reveal .slides > section.slide.present {
   top: 0 !important;
 }
 
@@ -179,28 +180,28 @@ $code-block-border-color: #d8e2f0;
 }
 
 .reveal section#title-slide.quarto-title-block .quarto-title-authors {
-  display: block;
-  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  margin-left: var(--title-left);
+  margin-top: 2em;
   position: static;
   text-align: left;
-  width: auto;
 }
 
 .reveal section#title-slide.quarto-title-block .quarto-title-author {
-  left: 3.7rem;
+  position: static;
   padding: 0;
-  position: absolute;
-  top: 27.8em;
+  margin: 0;
 }
 
 .reveal section#title-slide.quarto-title-block .quarto-title-author-name::after {
   color: var(--lecture-muted);
-  content: "PhD Student at IDSIA";
+  content: "PhD Student at IDSIA\A\A";
   display: block;
-  font-size: 1.0em;
+  font-size: 1.2em;
   font-weight: 520;
   line-height: 1.35;
-  margin-top: 0.42em;
   white-space: pre-line;
 }
 
@@ -211,11 +212,8 @@ $code-block-border-color: #d8e2f0;
   font-size: 1.0em;
   font-weight: 520;
   line-height: 1.35;
-  position: absolute;
-  right: 3.35rem;
-  text-align: right;
-  top: 27.8em;
-  width: 23em;
+  position: static;
+  text-align: left;
   white-space: pre-line;
 }
 
@@ -241,29 +239,24 @@ $code-block-border-color: #d8e2f0;
   width: 7.8em;
 }
 
+/* --- Loghi a destra --- */
 .reveal section#title-slide.quarto-title-block::before {
-  /* Per modificare le dimensioni dei loghi:
-     - Cambia 'background-size' (primo valore per IDISIA, secondo per POLIMI)
-     - Regola 'height' e 'width' del contenitore
-     - Regola 'left', 'bottom' per posizionare il blocco
-  */
   background-image:
     url("../../../../../assets/logos/logo_idsia_transparent.png"),
     url("../../../../../assets/logos/logo_polimi.png");
   background-position:
-    left center,
-    right center;
+    right center,
+    right bottom;
   background-repeat: no-repeat;
   background-size:
-    contain,
-    contain;
+    40% auto,
+    40% auto;
   content: "";
-  height: 6em;
+  height: 16em;
   position: absolute;
-  bottom: 2em;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 25em;
+  right: 2em;
+  bottom: 4em;
+  width: 22em;
   z-index: 2;
 }
 
@@ -276,28 +269,32 @@ $code-block-border-color: #d8e2f0;
     right center;
   background-repeat: no-repeat;
   background-size:
-    auto 1.6em,
-    auto 1.8em;
+    auto 2.2em,
+    auto 2.4em;
   bottom: 1.05em;
   content: "";
-  height: 2.0em;
-  opacity: 0.88;
+  height: 2.5em;
+  opacity: 0.95;
   pointer-events: none;
   position: absolute;
   right: 1.05em;
-  width: 9.5em;
+  width: 12em;
   z-index: 6;
 }
 
-.reveal .slide-number {
+/* Nascondi il numero slide di default di Quarto */
+.reveal .slide-number,
+.reveal .slide-number-a,
+.reveal .slide-number-b {
   display: none !important;
 }
 
+/* Footer: usa solo il data-attribute gestito da reveal_footer.html */
 .reveal .slides section.slide.level2[data-footer-number]::before {
   bottom: 1.05rem;
   color: var(--lecture-heading);
   content: attr(data-footer-number);
-  font-size: 0.92em;
+  font-size: 1.1em;
   font-weight: 700;
   left: 50%;
   line-height: 1;
@@ -306,19 +303,9 @@ $code-block-border-color: #d8e2f0;
   z-index: 7;
 }
 
+/* Rimuovi la classe CSS che aggiungeva un altro div */
 .footer-slide-number {
-  bottom: 1.05em;
-  color: var(--lecture-heading);
-  display: block;
-  font-size: 0.92em;
-  font-weight: 700;
-  left: 0;
-  line-height: 1;
-  pointer-events: none;
-  position: absolute;
-  right: 0;
-  text-align: center;
-  z-index: 7;
+  display: none !important;
 }
 
 .reveal section.section-divider {
