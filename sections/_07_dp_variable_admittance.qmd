@@ -62,8 +62,6 @@ Intuition: the policy can learn that some task phases require high stiffness whi
 Warning: outputting gains directly is high risk unless bounds, smoothing, and stability checks are enforced. The next slides instantiate this idea on real hardware.
 :::
 
----
-
 # Case Study: A Variable Admittance Diffusion Policy {.section-divider}
 
 ## Learning *What to Do* and *How Compliant to Be*
