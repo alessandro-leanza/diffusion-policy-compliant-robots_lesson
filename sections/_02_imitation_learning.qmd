@@ -46,11 +46,10 @@ One useful warning here is that $o_t$ is not necessarily the true state of the w
 
 ## Behavioral Cloning
 
-::: {.two-column-balanced}
 ::: {.compact}
 - Treat expert actions as supervised learning targets.
-- Fit the policy on samples from the demonstration dataset.
-- Simple and scalable; used since ALVINN, the first end-to-end neural driving policy [@pomerleau1988alvinn].
+- Fit the policy on demonstration samples; simple and scalable — used since ALVINN, the first end-to-end neural driving policy [@pomerleau1988alvinn].
+:::
 
 $$
 \mathcal{L}_{BC}(\theta)
@@ -60,12 +59,8 @@ $$
 \lVert \pi_\theta(o_t) - a_t \rVert^2
 \right]
 $$
-:::
 
-::: {}
-![](assets/figures/behavioral_cloning_pipeline.svg){width=100%}
-:::
-:::
+![](assets/figures/behavioral_cloning_pipeline.svg){width=82% fig-align="center"}
 
 ::: {.notes}
 Behavioral cloning is the most direct imitation learning method. We take the dataset of expert observation-action pairs and train a model by supervised learning. In the simplest continuous-action case, we minimize a squared error between the predicted action and the demonstrated action.

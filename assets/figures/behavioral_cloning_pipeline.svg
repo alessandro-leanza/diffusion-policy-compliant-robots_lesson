@@ -1,57 +1,61 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="340" viewBox="0 0 1400 340" role="img" aria-labelledby="title desc">
   <title id="title">Behavioral cloning pipeline</title>
-  <desc id="desc">Expert demonstrations are converted into observation-action pairs used to train a policy by supervised learning.</desc>
+  <desc id="desc">Expert demonstrations become supervised observation-action pairs; the policy predicts actions, a loss compares them to the expert targets, and its gradient updates the policy.</desc>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    <marker id="bcarrow" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto">
+      <path d="M2,2 L11,6 L2,10 Z" fill="#2563eb"/>
     </marker>
-    <marker id="arrow-muted" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#637083"/>
+    <marker id="bcfeed" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto">
+      <path d="M2,2 L11,6 L2,10 Z" fill="#637083"/>
     </marker>
     <style>
-      .box { fill: #ffffff; stroke: #aac4e8; stroke-width: 3; rx: 18; }
-      .soft { fill: #e0f2fe; stroke: #0891b2; stroke-width: 3; rx: 18; }
-      .label { fill: #12213f; font-family: Arial, sans-serif; font-size: 30px; font-weight: 700; }
-      .small { fill: #637083; font-family: Arial, sans-serif; font-size: 21px; }
-      .math { fill: #12213f; font-family: Arial, sans-serif; font-size: 24px; font-style: italic; }
-      .arrow { stroke: #2563eb; stroke-width: 5; fill: none; marker-end: url(#arrow); }
-      .update { stroke: #637083; stroke-width: 4; fill: none; marker-end: url(#arrow-muted); stroke-dasharray: 10 10; }
-      .dot { fill: #2563eb; opacity: 0.85; }
+      .bg { fill: #f8fbff; }
+      .box { fill: #ffffff; stroke: #d8e2f0; stroke-width: 2.5; }
+      .teal { fill: #e0f2fe; stroke: #0891b2; stroke-width: 2.5; }
+      .amber { fill: #fffbeb; stroke: #f59e0b; stroke-width: 2.5; }
+      .flow { stroke: #2563eb; stroke-width: 4.5; fill: none; marker-end: url(#bcarrow); }
+      .feed { stroke: #637083; stroke-width: 3.5; fill: none; stroke-dasharray: 10 8; marker-end: url(#bcfeed); }
+      .label { font: 700 27px sans-serif; fill: #12213f; }
+      .small { font: 500 20px sans-serif; fill: #637083; }
+      .mono { font: 700 24px monospace; fill: #12213f; }
+      .demo { stroke: #0891b2; stroke-width: 6; fill: none; stroke-linecap: round; }
+      .dot { fill: #2563eb; }
     </style>
   </defs>
+  <rect class="bg" width="1400" height="340"/>
 
-  <rect x="30" y="45" width="210" height="165" class="box"/>
-  <text x="135" y="105" text-anchor="middle" class="label">Expert</text>
-  <text x="135" y="142" text-anchor="middle" class="small">demonstrates</text>
-  <path d="M82 170 C118 130, 150 208, 190 160" stroke="#0891b2" stroke-width="8" fill="none" stroke-linecap="round"/>
-  <circle cx="82" cy="170" r="8" class="dot"/>
-  <circle cx="190" cy="160" r="8" class="dot"/>
+  <!-- 1. Expert -->
+  <rect class="box" x="40" y="50" width="250" height="150"/>
+  <text class="label" x="165" y="100" text-anchor="middle">Expert</text>
+  <text class="small" x="165" y="132" text-anchor="middle">demonstrates the task</text>
+  <path class="demo" d="M95 168 C130 138 150 188 185 158"/>
+  <circle class="dot" cx="95" cy="168" r="6"/>
+  <circle class="dot" cx="185" cy="158" r="6"/>
 
-  <path d="M255 128 L340 128" class="arrow"/>
+  <!-- 2. Dataset -->
+  <rect class="teal" x="360" y="50" width="270" height="150"/>
+  <text class="label" x="495" y="100" text-anchor="middle">Dataset</text>
+  <text class="mono"  x="495" y="140" text-anchor="middle">{ (o_t, a_t) }</text>
+  <text class="small" x="495" y="172" text-anchor="middle">supervised pairs</text>
 
-  <rect x="360" y="45" width="210" height="165" class="soft"/>
-  <text x="465" y="100" text-anchor="middle" class="label">Dataset</text>
-  <text x="465" y="137" text-anchor="middle" class="math">(o<tspan baseline-shift="sub" font-size="16">t</tspan>, a<tspan baseline-shift="sub" font-size="16">t</tspan>)</text>
-  <text x="465" y="172" text-anchor="middle" class="small">supervised pairs</text>
+  <!-- 3. Policy -->
+  <rect class="box" x="700" y="50" width="260" height="150"/>
+  <text class="label" x="830" y="100" text-anchor="middle">Policy</text>
+  <text class="mono"  x="830" y="140" text-anchor="middle">π_θ(o_t) → â_t</text>
+  <text class="small" x="830" y="172" text-anchor="middle">predict action</text>
 
-  <path d="M585 128 L670 128" class="arrow"/>
+  <!-- 4. Loss -->
+  <rect class="amber" x="1030" y="50" width="330" height="150"/>
+  <text class="label" x="1195" y="98" text-anchor="middle">BC objective</text>
+  <text class="mono"  x="1195" y="140" text-anchor="middle">‖ π_θ(o_t) − a_t ‖²</text>
+  <text class="small" x="1195" y="172" text-anchor="middle">prediction vs. target a_t</text>
 
-  <rect x="690" y="45" width="180" height="165" class="box"/>
-  <text x="780" y="100" text-anchor="middle" class="label">Policy</text>
-  <text x="780" y="138" text-anchor="middle" class="math">π<tspan baseline-shift="sub" font-size="16">θ</tspan>(o<tspan baseline-shift="sub" font-size="16">t</tspan>)</text>
-  <text x="780" y="173" text-anchor="middle" class="small">predict a<tspan baseline-shift="sub" font-size="14">t</tspan></text>
+  <!-- forward arrows -->
+  <path class="flow" d="M290 125 L356 125"/>
+  <path class="flow" d="M630 125 L696 125"/>
+  <path class="flow" d="M960 125 L1026 125"/>
 
-  <rect x="165" y="295" width="570" height="150" class="box"/>
-  <text x="450" y="350" text-anchor="middle" class="label">Behavioral cloning objective</text>
-  <text x="450" y="392" text-anchor="middle" class="math">compare π<tspan baseline-shift="sub" font-size="16">θ</tspan>(o<tspan baseline-shift="sub" font-size="16">t</tspan>) with expert a<tspan baseline-shift="sub" font-size="16">t</tspan></text>
-  <text x="450" y="425" text-anchor="middle" class="small">minimize prediction error</text>
-
-  <path d="M430 220 L360 285" class="arrow"/>
-  <text x="335" y="262" text-anchor="end" class="small">target a<tspan baseline-shift="sub" font-size="14">t</tspan></text>
-
-  <path d="M780 220 L610 285" class="arrow"/>
-  <text x="738" y="262" text-anchor="middle" class="small">prediction π<tspan baseline-shift="sub" font-size="14">θ</tspan>(o<tspan baseline-shift="sub" font-size="14">t</tspan>)</text>
-
-  <path d="M450 295 C485 245, 610 225, 690 175" class="update"/>
-  <text x="590" y="242" text-anchor="middle" class="small">update θ</text>
+  <!-- feedback: gradient updates the policy -->
+  <path class="feed" d="M1195 200 C1195 300 830 300 830 204"/>
+  <text class="small" x="1012" y="328" text-anchor="middle">gradient step — update θ</text>
 </svg>
