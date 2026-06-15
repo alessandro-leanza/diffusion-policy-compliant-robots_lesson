@@ -1,67 +1,3 @@
-# Diffusion Policy and Variable Admittance {.section-divider}
-
-## Why Combine Them?
-
-- Diffusion Policy can model multimodal task strategies.
-- Variable admittance can shape how the robot physically interacts.
-- The combined problem asks: what should the robot do, and how compliant should it be?
-
-::: {.notes}
-Main point: motivate the combined architecture as coupling decision-making with interaction behavior.
-
-Intuition: for the same insertion task, the robot may need both a trajectory choice and a compliance profile.
-
-Warning: do not imply the diffusion model should replace the controller; it can provide references or parameters that a controller enforces.
-:::
-
----
-
-## Architecture: Desired Trajectories
-
-The diffusion policy outputs desired motion:
-
-::: {.equation-card}
-$$
-\mathbf{x}^{des}_{t:t+H}
-\sim
-p_\theta(\mathbf{x}^{des}_{t:t+H} \mid \mathbf{o}_{t-T_o:t})
-$$
-:::
-
-An admittance controller handles contact response.
-
-::: {.notes}
-Main point: this is the conservative architecture: learn desired motion and keep compliance in a separate controller.
-
-Intuition: the diffusion policy says where to go; the admittance controller decides how measured force modifies that motion.
-
-Warning: this is easier to make safe, but may limit how much task-specific compliance the policy can express.
-:::
-
----
-
-## Architecture: Trajectory and Compliance Parameters
-
-The diffusion policy can also output motion and control parameters:
-
-::: {.equation-card}
-$$
-(\mathbf{x}^{des}_{t:t+H}, \mathbf{K}_{t:t+H}, \mathbf{D}_{t:t+H})
-\sim
-p_\theta(\cdot \mid \mathbf{o}_{t-T_o:t})
-$$
-:::
-
-The controller then enforces bounds before execution. *The rest of this section shows how we actually built this.*
-
-::: {.notes}
-Main point: this architecture lets the policy generate both motion and interaction parameters.
-
-Intuition: the policy can learn that some task phases require high stiffness while others require yielding behavior.
-
-Warning: outputting gains directly is high risk unless bounds, smoothing, and stability checks are enforced. The next slides instantiate this idea on real hardware.
-:::
-
 # Case Study: A Variable Admittance Diffusion Policy {.section-divider}
 
 ## Learning *What to Do* and *How Compliant to Be*
@@ -75,7 +11,7 @@ A diffusion policy that outputs motion **and** admittance gains on a Doosan arm.
 System at a glance: `Doosan m0609` · `Bota wrist F/T` · `Inspire hand` · `RealSense + Orbbec cameras`
 
 ::: {.notes}
-This is where the abstract pipeline becomes a concrete system. Everything from the previous slides — multimodal conditioning, a policy that outputs both a desired trajectory and compliance parameters, and a compliant low-level controller — is implemented here on a 6-DOF Doosan m0609 collaborative arm. The one-line thesis: instead of fixing the robot's stiffness by hand for each task, we let the policy decide how compliant to be, moment by moment, conditioned on what it sees and feels. The rest of the block walks through the controller, what the policy predicts, how it is deployed in real time, and what we found.
+This is where the abstract pipeline becomes a concrete system. Everything we built up so far — a diffusion policy over multimodal action trajectories, and the variable-admittance idea of learning how compliant to be — comes together here on a 6-DOF Doosan m0609 collaborative arm: a single policy that outputs both a desired motion and the compliance gains for the controller. The one-line thesis: instead of fixing the robot's stiffness by hand for each task, we let the policy decide how compliant to be, moment by moment, conditioned on what it sees and feels. The rest of the block walks through the controller, what the policy predicts, how it is deployed in real time, and what we found.
 
 TODO citation: add reference to the project / thesis once available.
 :::
