@@ -1,8 +1,14 @@
 # Diffusion Policy for Compliant Robots
 
-This repository contains lecture material for a graduate-level robotics / machine learning lecture.
+Public student repository for the graduate-level robotics / machine learning lecture:
 
-The topic is diffusion policies for compliant robots, connecting imitation learning, diffusion models, real-time robot control, and variable admittance/impedance control.
+**Diffusion Policy for Compliant Robots: From Imitation Learning to Variable Admittance Control**
+
+The lecture PDF is available directly in this repository:
+
+- [`slides.pdf`](slides.pdf)
+
+The source deck is written in Quarto/reveal.js for students who want to inspect or reuse the material.
 
 ## Overview
 
@@ -41,9 +47,16 @@ The material is intended for graduate students or researchers with basic familia
 
 Used for: AI Applications to Industrial Robotics, PhD Course at Politecnico di Milano (POLIMI), 2025/2026
 
+## For Students
+
+Start from [`slides.pdf`](slides.pdf). The `practice/` folder contains companion notebooks for the diffusion-model and Diffusion Policy exercises.
+
+The notebooks are intended to be read and run selectively during or after the lecture. Large runtime artifacts, datasets, checkpoints, and generated outputs are intentionally not committed to this repository.
+
 ## Repository Structure
 
 - `slides.qmd`: main Quarto slide deck file
+- `slides.pdf`: rendered lecture PDF
 - `custom.scss`: minimal academic Quarto/reveal.js theme for the slides
 - `sections/`: modular slide sections included by `slides.qmd`
 - `references.bib`: bibliography entries
@@ -55,7 +68,7 @@ Used for: AI Applications to Industrial Robotics, PhD Course at Politecnico di M
 - `scripts/`: helper scripts
 - `handouts/`: optional teaching material
 
-## How to View the Slides
+## For Contributors
 
 Preview the slides locally with Quarto:
 

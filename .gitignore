@@ -1,7 +1,6 @@
 .quarto/
 *_files/
 slides.html
-slides.pdf
 slides.pptx
 .~lock.*#
 *.log
