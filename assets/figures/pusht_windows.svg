@@ -61,7 +61,7 @@
   <text class="small" x="855" y="394" text-anchor="middle">T_pred = 16 action steps</text>
 
   <path class="line" d="M710 185 C760 150, 835 150, 885 315"/>
-  <text class="small" x="790" y="172" text-anchor="middle">conditioned generation</text>
+  <text class="small" x="812" y="138" text-anchor="middle">conditioned generation</text>
 
   <rect class="panel" x="180" y="450" width="740" height="52"/>
   <text class="body" x="550" y="484" text-anchor="middle">Learn p(action chunk | observation history), then replan.</text>

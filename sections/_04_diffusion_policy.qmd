@@ -14,6 +14,14 @@ $$
 
 The output is not a single command. It is a temporally structured action chunk conditioned on recent observations.
 
+This is exactly the generic diffusion recipe, with the generated sample set to an action chunk and the conditioning set to the observation history:
+
+$$
+\mathbf{A}_{t:t+H} \in \mathbb{R}^{H \times D_a},
+\qquad
+c = \mathbf{o}_{t-T_o:t}
+$$
+
 ::: {.notes}
 Main point: Diffusion Policy models a conditional distribution over action chunks.
 
@@ -198,8 +206,20 @@ At robot time $t$:
 5. execute a prefix of the chunk
 :::
 
+Each denoising step is the conditional reverse update applied to the action chunk:
+
+$$
+\mathbf{A}_{k-1}
+=
+\frac{1}{\sqrt{\alpha_k}}
+\left(
+\mathbf{A}_k - \frac{1-\alpha_k}{\sqrt{1-\bar{\alpha}_k}}\,\epsilon_\theta(\mathbf{A}_k, k, \mathbf{o}_{t-T_o:t})
+\right)
++ \sqrt{\tilde{\beta}_k}\,z
+$$
+
 ::: {.takeaway}
-The policy constructs an action sequence through iterative refinement rather than a single forward prediction.
+The policy constructs an action sequence through iterative refinement rather than a single forward prediction. It is the same DDPM/DDIM reverse loop, now conditioned on observations [@chi2023diffusionpolicy].
 :::
 
 ::: {.notes}

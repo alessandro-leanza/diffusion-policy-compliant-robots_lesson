@@ -62,8 +62,8 @@
     <text class="small" x="158" y="72" text-anchor="middle">conditioned on observations c</text>
     <rect x="32" y="104" width="250" height="58" fill="#e0f2fe" stroke="#0891b2" stroke-width="3" rx="10"/>
     <text class="eq" x="157" y="140" text-anchor="middle">eps_theta(xk, k, c)</text>
-    <path class="rev" d="M276 185 C210 214, 104 214, 38 185"/>
-    <text class="small" x="157" y="215" text-anchor="middle">iterative denoising to recover x0</text>
+    <path class="rev" d="M276 176 C212 196, 102 196, 38 176"/>
+    <text class="small" x="157" y="222" text-anchor="middle">iterative denoising to recover x0</text>
   </g>
 
   <path class="rev" d="M790 350 C700 395, 615 395, 525 350"/>

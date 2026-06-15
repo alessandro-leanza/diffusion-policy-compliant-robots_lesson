@@ -124,6 +124,18 @@ $$
 \bar{\alpha}_k = \prod_{i=1}^{k}\alpha_i .
 $$
 
+Equivalently, the marginal is a single Gaussian centered on a shrinking copy of the clean sample:
+
+$$
+q(x_k \mid x_0)
+=
+\mathcal{N}\!\left(
+x_k;\;
+\sqrt{\bar{\alpha}_k}\,x_0,\;
+(1-\bar{\alpha}_k)I
+\right)
+$$
+
 ::: {.takeaway}
 Training does not require simulating all previous noising steps. We can draw $k$ and corrupt $x_0$ in one step.
 :::
@@ -178,6 +190,107 @@ There are other parameterizations, such as predicting $x_0$ or a velocity variab
 
 ---
 
+## Why the Reverse Step Is Hard
+
+::: {.two-column-balanced}
+::: {.compact}
+The step we would like to sample, $q(x_{k-1}\mid x_k)$, is **intractable**:
+
+$$
+q(x_{k-1}\mid x_k)
+=
+\frac{q(x_k\mid x_{k-1})\,q(x_{k-1})}{q(x_k)}
+$$
+
+Both marginals depend on the unknown data distribution $q(x_0)$.
+:::
+
+::: {.compact}
+But **conditioned on $x_0$** it is a tractable Gaussian:
+
+$$
+q(x_{k-1}\mid x_k, x_0)
+=
+\mathcal{N}\!\left(x_{k-1};\ \tilde{\mu}_k,\ \tilde{\beta}_k I\right)
+$$
+
+$$
+\tilde{\mu}_k
+=
+\frac{1}{\sqrt{\alpha_k}}
+\left(
+x_k - \frac{1-\alpha_k}{\sqrt{1-\bar{\alpha}_k}}\,\epsilon
+\right),
+\quad
+\tilde{\beta}_k
+=
+\frac{1-\bar{\alpha}_{k-1}}{1-\bar{\alpha}_k}\,\beta_k
+$$
+:::
+:::
+
+::: {.warning}
+At generation time $x_0$ is exactly what we are trying to produce. So we train a network $p_\theta(x_{k-1}\mid x_k, c)$ to *approximate* this posterior.
+:::
+
+::: {.notes}
+Main point: motivate why a neural network is needed at all, instead of just inverting the forward process analytically.
+
+This is the rigorous backbone behind the noise-prediction loss. It can be delivered quickly or treated as optional depending on the audience, but it answers the natural question "why not just reverse the Gaussian?".
+
+The true single-step reverse conditional is intractable because, through Bayes' rule, it depends on the marginal $q(x_k)$, which in turn depends on the unknown $q(x_0)$. The key trick from the DDPM derivation is that, once we additionally condition on the clean sample $x_0$, the reverse conditional becomes a closed-form Gaussian whose mean $\tilde{\mu}_k$ and variance $\tilde{\beta}_k$ are known functions of the noise schedule.
+
+The mean $\tilde{\mu}_k$ is exactly the quantity the model will learn to match. Notation follows our diffusion-time index $k$; the derivation is adapted from Vincenzo Pomponi's lecture material [@pomponi2026chaos2clarity] and the original DDPM paper [@ho2020ddpm].
+:::
+
+---
+
+## From Likelihood to the Loss
+
+::: {.compact}
+We want to maximize the data likelihood $\log p_\theta(x_0)$, but the marginal is intractable. Using the forward process and Jensen's inequality gives a tractable **Evidence Lower Bound**:
+:::
+
+::: {.equation-card}
+$$
+\log p_\theta(x_0)
+\;\ge\;
+\mathcal{L}_{\text{ELBO}}
+=
+\mathbb{E}_q\!\left[
+\log \frac{p_\theta(x_{0:K})}{q(x_{1:K}\mid x_0)}
+\right]
+$$
+:::
+
+It decomposes into per-step KL divergences between the two Gaussians above:
+
+$$
+\mathcal{L}_{\text{ELBO}}
+=
+\underbrace{\mathbb{E}_q\big[\log p_\theta(x_0\mid x_1)\big]}_{\text{reconstruction}}
+-
+\sum_{k\ge 2}
+D_{\mathrm{KL}}\!\big(
+q(x_{k-1}\mid x_k, x_0)\,\|\,p_\theta(x_{k-1}\mid x_k)
+\big)
++ \text{const}
+$$
+
+::: {.takeaway}
+Each Gaussian KL reduces to $\frac{1}{2\tilde{\beta}_k}\lVert\tilde{\mu}_k - \mu_\theta(x_k,k)\rVert^2$, which — after reparameterizing the mean through the noise — recovers the simple noise-prediction loss $\lVert\epsilon - \epsilon_\theta(x_k,k,c)\rVert^2$.
+:::
+
+::: {.notes}
+Main point: close the loop between the probabilistic derivation and the simple squared-error loss introduced earlier.
+
+The full ELBO is the same object that appears in variational autoencoders. The important conceptual steps are: (1) we cannot maximize the true log-likelihood, (2) we maximize a lower bound instead, (3) the bound becomes a sum of KL divergences between Gaussians, which are available in closed form, and (4) matching the means is equivalent, up to a per-step weight, to predicting the injected noise.
+
+In practice the weighting is dropped and the constant terms are ignored, which is exactly the $\lVert\epsilon - \epsilon_\theta\rVert^2$ objective from the previous slide. This is why noise prediction is not an arbitrary heuristic: it is the simplified ELBO [@ho2020ddpm]. Derivation adapted from [@pomponi2026chaos2clarity].
+:::
+
+---
+
 ## Architecture Depends on Structure
 
 ::: {.two-column-balanced}
@@ -228,6 +341,90 @@ Main point: introduce the computational bottleneck before discussing DDPM and DD
 This is where diffusion models become different from a standard feed-forward policy. A deterministic policy typically performs one forward pass per control query. A diffusion policy may require tens or hundreds of denoising passes to produce one action chunk.
 
 For offline image generation, this may be acceptable. For robot control, latency and jitter affect closed-loop behavior, tracking error, and contact response.
+:::
+
+---
+
+## DDPM Sampling
+
+::: {.two-column-balanced}
+::: {.compact}
+Start from noise $x_K \sim \mathcal{N}(0,I)$ and walk back step by step. The predicted noise fixes the reverse mean:
+
+$$
+\mu_\theta(x_k,k)
+=
+\frac{1}{\sqrt{\alpha_k}}
+\left(
+x_k - \frac{1-\alpha_k}{\sqrt{1-\bar{\alpha}_k}}\,\epsilon_\theta(x_k,k,c)
+\right)
+$$
+
+Then sample the next, less noisy state:
+
+$$
+x_{k-1} = \mu_\theta(x_k,k) + \sqrt{\tilde{\beta}_k}\,z,
+\qquad z \sim \mathcal{N}(0,I)
+$$
+
+- $\mu_\theta$: deterministic denoising direction
+- $\sqrt{\tilde{\beta}_k}\,z$: stochastic exploration term
+:::
+
+::: {}
+![](assets/figures/ddpm_sampling_loop.svg){width=92%}
+:::
+:::
+
+::: {.notes}
+Main point: make the abstract reverse loop concrete as the original DDPM ancestral sampler.
+
+This is the same $\mu_\theta$ that the ELBO told us to match. The sampler simply plugs the network's noise prediction into the closed-form reverse mean and then adds calibrated Gaussian noise with variance $\tilde{\beta}_k$.
+
+The flowchart on the right is the full algorithm: sample noise, loop $k = K \ldots 1$ predicting noise, computing the mean, and sampling the next state, then return $x_0$. The stochastic term is why DDPM usually needs many steps to produce clean samples [@ho2020ddpm].
+:::
+
+---
+
+## DDIM Sampling
+
+::: {.compact}
+DDIM reuses the *same trained network* but rewrites the reverse step. First read off an estimate of the clean sample:
+:::
+
+::: {.equation-card}
+$$
+\hat{x}_0
+=
+\frac{1}{\sqrt{\bar{\alpha}_k}}
+\left(
+x_k - \sqrt{1-\bar{\alpha}_k}\,\epsilon_\theta(x_k,k,c)
+\right)
+$$
+:::
+
+then move along a non-Markovian trajectory with a controllable noise level $\sigma_k$:
+
+$$
+x_{k-1}
+=
+\sqrt{\bar{\alpha}_{k-1}}\,\hat{x}_0
++
+\sqrt{1-\bar{\alpha}_{k-1}-\sigma_k^2}\;\epsilon_\theta(x_k,k,c)
++
+\sigma_k z
+$$
+
+::: {.takeaway}
+$\sigma_k$ is a free knob. With $\sigma_k = 0$ sampling is **deterministic** and can skip many intermediate steps — attractive for meeting a control-loop budget.
+:::
+
+::: {.notes}
+Main point: DDIM is a different sampler, not a different model — no retraining is needed.
+
+The first equation is exactly the $\hat{x}_0$ readout implied by the closed-form forward process. The second equation reconstructs $x_{k-1}$ from this estimate plus a controllable amount of injected noise.
+
+When $\sigma_k = 0$ the whole trajectory is determined by the initial noise and the network outputs, so we can take large steps and still land on a coherent sample. This is the main reason DDIM-style samplers appear in real-time diffusion policies, where each denoising step costs one network evaluation [@song2021ddim].
 :::
 
 ---

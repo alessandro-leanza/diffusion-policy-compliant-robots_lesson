@@ -31,9 +31,9 @@
   <rect class="blue" x="205" y="195" width="70" height="58"/>
   <rect class="blue" x="310" y="195" width="70" height="58"/>
   <rect class="blue" x="415" y="195" width="70" height="58"/>
-  <path class="arrow-blue" d="M485 224 L390 224"/>
-  <path class="arrow-blue" d="M380 224 L285 224"/>
-  <path class="arrow-blue" d="M275 224 L180 224"/>
+  <path class="arrow-blue" d="M415 224 L384 224"/>
+  <path class="arrow-blue" d="M310 224 L279 224"/>
+  <path class="arrow-blue" d="M205 224 L174 224"/>
   <text class="mono" x="135" y="232" text-anchor="middle">x0</text>
   <text class="mono" x="240" y="232" text-anchor="middle">x1</text>
   <text class="mono" x="345" y="232" text-anchor="middle">...</text>
@@ -49,8 +49,8 @@
   <rect class="teal" x="625" y="195" width="70" height="58"/>
   <rect class="teal" x="760" y="195" width="70" height="58"/>
   <rect class="teal" x="895" y="195" width="70" height="58"/>
-  <path class="arrow-teal" d="M965 224 L840 224"/>
-  <path class="arrow-teal" d="M830 224 L705 224"/>
+  <path class="arrow-teal" d="M895 224 L834 224"/>
+  <path class="arrow-teal" d="M760 224 L699 224"/>
   <text class="mono" x="660" y="232" text-anchor="middle">x0</text>
   <text class="mono" x="795" y="232" text-anchor="middle">tau1</text>
   <text class="mono" x="930" y="232" text-anchor="middle">xK</text>

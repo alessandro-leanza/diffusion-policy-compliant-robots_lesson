@@ -33,8 +33,8 @@
 
   <rect class="box amber" x="365" y="90" width="230" height="245"/>
   <text class="label" x="480" y="135" text-anchor="middle">conditioning MLPs</text>
-  <text class="body" x="480" y="184" text-anchor="middle">obs embedding</text>
-  <text class="body" x="480" y="228" text-anchor="middle">sinusoidal time embedding</text>
+  <text class="small" x="480" y="184" text-anchor="middle">obs embedding</text>
+  <text class="small" x="480" y="228" text-anchor="middle">sinusoidal time embedding</text>
   <text class="mono" x="480" y="284" text-anchor="middle">cond = concat(...)</text>
 
   <rect class="box red" x="365" y="400" width="230" height="90"/>
