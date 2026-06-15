@@ -20,6 +20,11 @@ practice/train_pusht_long.py
 practice/*.aux
 practice/*.toc
 practice/*.out
+speaker_notes.tex
+speaker_notes.pdf
+speaker_notes.aux
+speaker_notes.toc
+speaker_notes.out
 .DS_Store
 AGENTS.md
 lecture_timing.md
