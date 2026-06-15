@@ -8,7 +8,7 @@ A diffusion policy that outputs motion **and** admittance gains on a Doosan arm.
 - A **diffusion policy** predicts, at every step, a motion command **plus** the stiffness `K` and damping ratio `ζ` the controller should use.
 - Compliance is **learned from demonstrations**, not hand-tuned per task.
 
-System at a glance: `Doosan m0609` · `Bota wrist F/T` · `Inspire hand` · `RealSense + Orbbec cameras`
+System at a glance: `Doosan m0609` · `Bota wrist F/T` · `Inspire hand` · `Third-person camera (RealSense / Orbbec)`
 
 ::: {.notes}
 This is where the abstract pipeline becomes a concrete system. Everything we built up so far — a diffusion policy over multimodal action trajectories, and the variable-admittance idea of learning how compliant to be — comes together here on a 6-DOF Doosan m0609 collaborative arm: a single policy that outputs both a desired motion and the compliance gains for the controller. The one-line thesis: instead of fixing the robot's stiffness by hand for each task, we let the policy decide how compliant to be, moment by moment, conditioned on what it sees and feels. The rest of the block walks through the controller, what the policy predicts, how it is deployed in real time, and what we found.
@@ -25,7 +25,7 @@ TODO citation: add reference to the project / thesis once available.
 - **Robot:** Doosan **m0609**, 6 DOF, velocity interface (`speedl`).
 - **Force sensing:** **Bota** wrist F/T sensor; per-episode tare, frame-corrected into the base frame.
 - **End-effector:** Inspire multi-finger hand (open/grasp).
-- **Vision:** RealSense (wrist) + Orbbec Femto (third-person).
+- **Vision:** a single **third-person** camera — Intel RealSense *or* Orbbec Femto (interchangeable, no wrist camera).
 :::
 
 ```text

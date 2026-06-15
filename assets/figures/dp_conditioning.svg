@@ -25,7 +25,7 @@
   <rect class="box blue" x="40" y="60" width="250" height="110"/>
   <text class="label" x="165" y="100" text-anchor="middle">RGB image</text>
   <text class="mono"  x="165" y="132" text-anchor="middle">84 × 84</text>
-  <text class="small" x="165" y="158" text-anchor="middle">wrist + third-person cams</text>
+  <text class="small" x="165" y="158" text-anchor="middle">third-person camera</text>
 
   <rect class="box amber" x="40" y="200" width="250" height="110"/>
   <text class="label" x="165" y="240" text-anchor="middle">Wrench</text>
