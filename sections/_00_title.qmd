@@ -20,11 +20,3 @@ Two halves: first **how a robot decides what to do**, then **how it acts safely 
 7. Research directions & discussion
 :::
 :::
-
-::: {.notes}
-The lecture is organized as a two-part story, and this map shows where each block fits.
-
-Part I answers "how do we generate robot actions?"; Part II asks "how do those actions behave under contact, and how do we keep them safe?". The case study at the end ties both halves together on real hardware.
-
-Diffusion Policy should not be treated as a complete control solution. It still needs a real robot controller underneath. This map is enough for now; the technical material starts next.
-:::
